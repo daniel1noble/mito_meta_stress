@@ -1,0 +1,27 @@
+---
+title: "Results"
+format:
+  docx:
+    reference-doc: ./bib/template.docx
+    output-file: "results.docx"
+editor_options: 
+  chunk_output_type: console
+execute:
+  freeze: auto  # re-render only when source changes
+  cache: false
+  echo: false
+  warning: false
+  error: false
+  include: true
+crossref:
+  fig-title: 'Figure'
+  fig-labels: arabic
+  title-delim: "-"
+  fig-prefix: "Figure"
+  tbl-prefix: "Table"
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+
