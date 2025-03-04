@@ -48,6 +48,15 @@
 		 mutate(species_phylo = paste(genus, species, sep = "_"),
 		 		species_phylo = ifelse(species_phylo == "Meleagris_gallopavo domesitcus", "Meleagris_gallopavo", species_phylo))
 
+	# Few more fixes in data to match species in data and tree
+	 data <- data %>%
+		 mutate(species_phylo = ifelse(species_phylo == "Trachemys_scripta elegans", "Trachemys_scripta_elegans", 
+		 								if_else(species_phylo == "Oncorhynchus_tschawyscha", "Oncorhynchus_tshawytscha", 
+										if_else(species_phylo == "Tamiasciurus_hudonicus", "Tamiasciurus_hudsonicus",
+										if_else(species_phylo == "Cortunix_japonica", "Coturnix_japonica", 
+										if_else(species_phylo == "Symphysodon_aequifasciatus", "Symphysodon_aequifasciata",
+										if_else(species_phylo %in% c("Dicentrarachus_labrax", "Dichentrarchus_labrax"), "Dicentrarchus_labrax", species_phylo)))))))
+
 	 # Create a phylogeny. Looks like all species are matched and in the tree
 	 tol_subtree  <- rotl::tnrs_match_names(unique(data$species_phylo))
 
@@ -56,14 +65,33 @@
 
 	 # Check the tree. Some warnings
 	 length(unique(data$species_phylo)); length(tree$tip.label) # lost two species, which ones
-	 setdiff(tree$tip.label, unique(data$species_phylo))
-
+	
 	 # Fix labels so they match the data
 	 tree$tip.label <- gsub("_\\([^)]*\\)", "", tree$tip.label)
+
+	 # Check the tree again
+		tree_checks(data, tree, dataCol = "species_phylo")
 	 
 	 # Write final tree
 	 write.tree(tree, here("output", "phylo", "phylo.tre"))
+	write.table(tree$tip.label, here("output", "phylo", "phylo_species.txt"), row.names = FALSE, col.names = FALSE)
 
+	 # Plot the tree
+	 plot_tree <- ape::plot.phylo(tree, cex = 0.5, label.offset = 0.5, show.tip.label = TRUE, edge.width = 1, type = "fan", no.margin = TRUE)
+	 ggsave(here("output", "phylo", "phylo.png"), plot_tree, width = 22.888889, height = 8.604938)
+
+	 # Check the tree
+	 tree_checks(data, tree, dataCol = "species_phylo")
+
+	 # Prune the tree
+	 tree <- tree_checks(data, tree, dataCol = "species_phylo", type = "prune")
+
+	 # Check the tree
+	 tree_checks(data, tree, dataCol = "species_phylo")
+
+	 # Write final tree
+	 write.tree(tree, here("output", "phylo", "phylo_pruned.tre"))
+	 write.table(gsub("_", " ", tree$tip.label), here("output", "phylo", "phylo_pruned_species.txt"), row.names = FALSE, col.names = FALSE)
 
 #### --------------------------------------------------  ####
 # 3. Effect size calculations
