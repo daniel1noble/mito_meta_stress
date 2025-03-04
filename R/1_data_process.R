@@ -56,7 +56,7 @@
 
 	 # Check the tree. Some warnings
 	 length(unique(data$species_phylo)); length(tree$tip.label) # lost two species, which ones
-	 setdiff(unique(data$species_phylo), tree$tip.label)
+	 setdiff(tree$tip.label, unique(data$species_phylo))
 
 	 # Fix labels so they match the data
 	 tree$tip.label <- gsub("_\\([^)]*\\)", "", tree$tip.label)
