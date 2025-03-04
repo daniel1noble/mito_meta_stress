@@ -25,3 +25,21 @@ editor:
 ---
 
 
+```{r, loadpacks}
+#| label: loadpacks
+#| echo: false
+#| warning: false
+#| error: false
+
+## Loading some important packages. For first time use, unannotate and install the two packages first
+	source(here("R", "func.R"))
+  	check_and_install("pacman")
+	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, brms, ggrepel, patchwork)
+
+# Load the data
+	data <- read_excel(here("data", "mito_meta_data_merged_03032025.xlsx"))
+
+
+# Set digits
+  options(digits = 2)
+```
