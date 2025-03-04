@@ -38,7 +38,6 @@
 	unique(data$measurement_category) # Some issues here with gene expression. Probably just call "gene/protein expression"
 	unique(data$tissue_sum) # Some issues here "BAT" == "brown adipose tissue (BAT)" == "bat"; "whole body" == "whole animal"; "whole blood" == "blood"; "skeletal muscle" == "muscle"; what is "wat"? Is that bat?
 
-
 #### --------------------------------------------------  ####
 # 2. Phylogeny
 #### --------------------------------------------------  ####
@@ -89,9 +88,9 @@
 	 # Check the tree
 	 tree_checks(data, tree, dataCol = "species_phylo")
 
-	 # Write final tree
+	 # Write final tree. Can use the species names to try and get timetree as well. 
 	 write.tree(tree, here("output", "phylo", "phylo_pruned.tre"))
-	 write.table(gsub("_", " ", tree$tip.label), here("output", "phylo", "phylo_pruned_species.txt"), row.names = FALSE, col.names = FALSE)
+	 write.table(gsub("_", " ", tree$tip.label), here("output", "phylo", "phylo_pruned_species.txt"), quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 #### --------------------------------------------------  ####
 # 3. Effect size calculations
