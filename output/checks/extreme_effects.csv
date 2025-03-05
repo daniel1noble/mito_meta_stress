@@ -1,0 +1,100 @@
+study,descrp_measure,units...42,mean_t1,sd_t1,n_t1,mean_t2,sd_t2,n_t2,SMDH,v_SMDH,Notes from Dan
+s6,oxidized glutathione,nmol/mg,0.491,0.004898979,6,0.416,0.004898979,6,14.12659939,10.37804051,"Seems odd that the SD is exactly the same for both t1 and t2, CHECK"
+s10,"myeloperoxidase (MPO) activity, neutrophil infiltrate in tissues",mU/mg,0.071013699,0.009870317,12,0.026520548,0.006074041,12,5.241704517,0.933072246,fine
+s14,energy metabolism,nmol/mg,5.5,0.4,4,10.1,0.2,4,-12.63545834,18.76087818,Very small SD relative to mean. Best to check SD CHECK
+s14,ros production,percent,72.3,4,4,2.1,0.1,4,21.55210095,77.98552734,Seems like an error in sd_t2. If percentage then 0.1 seems small CHECK
+s16,"malondialdehyde levels, lipid peroxidation",nmol/g,5.218253968,0.537914354,15,1.468253968,0.307379631,15,8.328312894,1.70069006,"Seems like small SD, Check it's SD"
+s16,catalase (CAT) activity,U/g,2.433070866,0.228719489,15,4.996062992,0.548926773,15,-5.930185641,1.08220558,Fine
+s19,"provides an estimate of oxidative damage, calculated by substraction between sum of standardized values of antioxidant (GSH and redox) and oxidative biomarkers (MDA, carbonyls, and GSSG content)",unitless,-1.177777778,0.99380799,5,11.08888889,1.788854382,5,-7.652462248,5.18153082,Fine
+s22,"catalase, converts H2O2 to molecular oxygen and water",ug/g,336.36,7.638344061,3,454.02,17.51103366,3,-6.949427252,9.830608499,"SD seems awfully low relative to mean, CHECK"
+s22,"catalase, converts H2O2 to molecular oxygen and water",ug/g,558.35,3.741229744,3,298.92,44.23657763,3,6.593956674,11.71676786,fine
+s22,glutathione peroxidase; isozyme that use GSH to reduce H2O2 and organic and lipid hydroperoxides,U/g,31.15,1.420281662,3,84.55,4.711178197,3,-12.24552463,32.76214198,check SD is not SE
+s22,glutathione peroxidase; isozyme that use GSH to reduce H2O2 and organic and lipid hydroperoxides,U/g,27.13,3.273576026,3,83.97,5.248113947,3,-10.36913005,17.0394771,check SD is not SE
+s22,glutathione peroxidase; isozyme that use GSH to reduce H2O2 and organic and lipid hydroperoxides,U/g,19.38,1.299038106,3,110.25,4.832421753,3,-20.49085875,92.77404604,check SD is not SE
+s22,glutathione peroxidase; isozyme that use GSH to reduce H2O2 and organic and lipid hydroperoxides,U/g,11.8,0.90066642,3,50.24,3.897114317,3,-10.84416435,27.56884091,check SD is not SE
+s22,glutathione reductase; maintains reduced glutathione and glutathione-S-transferase,U/g,2.41,0.190525589,3,23.16,2.182384018,3,-10.68792163,29.12916545,check SD is not SE
+s22,glutathione reductase; maintains reduced glutathione and glutathione-S-transferase,U/g,2.41,0.138564065,3,14.51,1.299038106,3,-10.45109596,27.69888243,check SD is not SE
+s22,glutathione reductase; maintains reduced glutathione and glutathione-S-transferase,U/g,1.31,0.051961524,3,11.06,1.766691824,3,-6.224595199,10.66966683,check SD is not SE
+s22,glutthione-S-transferase; the oxidised glutathione (GSSG) is reduced back to GSH by GR using NADPH as the electron donor,ug/g,117.57,4.434050067,3,259.66,21.56403255,3,-7.282764489,13.22753454,fine
+s22,glutthione-S-transferase; the oxidised glutathione (GSSG) is reduced back to GSH by GR using NADPH as the electron donor,ug/g,144.39,9.162548772,3,77.95,5.733088173,3,6.936253658,8.163933405,fine
+s22,"reduced glutathione, protects cells against apoptosis, scavenges, hydroxyl radical and signlet oxygen directly, detoxifying H2O2 and lipid peroxides by the catalytic action of GSHpx",ug/g,118.23,8.487048957,3,261.95,14.68779085,3,-9.559961646,15.27301768,check SD is not SE
+s22,GSSG is reduced back to GSH by the enzyme glutathione reductase,ug/g,24.39,0.866025404,3,18.8,0.727461339,3,5.576961441,5.003643826,check SD is not SE
+s23,"alanine aminotransferase, enzyme that catalyzes the formation of pyruvate and glutamate",U/mg,164.9184149,3.496503497,3,64.1025641,19.81351981,3,5.654094135,8.524024779,fine
+s26,superoxide dismutase,U/mg,271.0382514,10.92896175,9,172.6775956,13.1147541,9,7.759171026,2.192577532,fine
+s26,collection time not specified but nothing indicates fish were restrained before blood was collected,ng/ml,28.5483871,0.725806452,9,22.74193548,0.725806452,9,7.618030684,2.063574734,check SD is not SE
+s28,catlase,U/mg,5.224952324,0.30377513,20,0.571256296,0.139367299,20,19.29996046,7.091420062,check SD is not SE
+s28,catlase,U/mg,6.950942736,1.173851789,20,0.991174882,0.247201435,20,6.886260124,1.251688998,Check mean for t2. Seems veru low relative to t1
+s28,catlase,U/mg,16.50802307,2.856916086,20,2.043012179,1.037025169,20,6.596811952,1.014864054,fine
+s28,catlase,U/mg,7.646522279,1.407534771,20,1.309744395,0.239519391,20,6.151777246,1.046690138,fine
+s29,catalase,mmol/min/mg,66.52,1.420704051,6,18.4,5.927765178,6,10.30157078,9.92192728,check SD is not SE
+s29,catalase,mmol/min/mg,41.21,4.262112152,6,9.52,2.890397896,6,8.030312828,4.0655944,check SD is not SE
+s29,catalase,mmol/min/mg,46.18,3.159841768,6,5.26,3.110851973,6,12.04255847,7.652930817,"Check mean and SD. Maybe ok, bu t1 is quite different"
+s29,superoxide dismutase,umol/mg,20.33,1.371714256,6,9,1.175755077,6,8.183739928,3.827008945,check SD is not SE
+s29,adenosine triphosphatase activity,ug/mg/min,62.13,4.335596845,6,15.19,5.731805998,6,8.523161207,4.301212311,fine
+s29,adenosine triphosphatase activity,ug/mg/min,55.78,6.344178434,6,15.19,5.731805998,6,6.195135538,2.338622757,fine
+s29,adenosine triphosphatase activity,ug/mg/min,25.61,4.262112152,6,61.95,2.939387691,6,-9.159444622,5.12448584,check SD is not SE
+s29,adenosine triphosphatase activity,ug/mg/min,20.52,2.890397896,6,80.66,5.511351921,6,-12.61072409,10.92207257,check SD is not SE
+s29,adenosine triphosphatase activity,ug/mg/min,84.8,4.458071332,6,61.95,2.939387691,6,5.584072783,2.201109083,check SD is not SE
+s29,adenosine triphosphatase activity,ug/mg/min,133.23,26.6994382,6,15.19,5.731805998,6,5.640792882,3.31384296,fine
+s41,catalase,nmol/min/mg,83.8856581,3.483245121,6,7.320340285,6.190322967,6,14.06647141,12.95854094,check as measn are really different and SD low
+s41,glutathione-S-transferase,nmol/min/mg,573.8696626,39.81710098,6,12.93864011,0.654725612,6,18.38137954,34.16925013,check SD is not SE especially t2 mean and SD
+s44,protein oxidation,nmol/mg,1.8738256,0.155373981,6,1.059109947,0.086565079,6,5.977532704,2.681300588,fine
+s44,protein thiols,nmol/mg,20.31062409,0.726156922,6,41.38164337,2.11856927,6,-12.27776641,12.63798809,check SD is not SE
+s44,protein thiols,nmol/mg,30.81215537,1.260834881,6,41.38164337,2.11856927,6,-5.594601338,2.320910218,fine
+s44,alanine-aminotransferase (ALT) activity,ug/30min/mg,23.5755202,2.573785435,6,9.778124351,1.347950379,6,6.197098068,2.942995374,fine
+s44,alanine-aminotransferase (ALT) activity,ug/30min/mg,38.85651566,1.530704787,6,10.90729963,2.016491847,6,14.40659784,11.52762965,check SD is not SE
+s44,alanine-aminotransferase (ALT) activity,ug/30min/mg,24.55687189,2.107178823,6,10.90729963,2.016491847,6,6.107198766,2.268498097,fine
+s44,protein oxidation,nmol/mg,1.404701258,0.063222084,6,0.903707518,0.10720541,6,5.252948308,2.102765958,fine
+s44,protein thiols,nmol/mg,23.56421698,1.151139781,6,33.3729552,1.258215995,6,-7.505778291,3.239001614,check SD is not SE
+s44,alanine-aminotransferase (ALT) activity,ug/30min/mg,23.96476571,1.463768106,6,8.107419799,2.301850675,6,7.585914326,3.794856803,check SD is not SE
+s44,alanine-aminotransferase (ALT) activity,ug/30min/mg,37.80520253,1.404725815,6,16.50114498,2.999493062,6,8.393667791,5.366711638,check SD is not SE
+s44,asparatate-aminotransferase (AST) activity,ug/hr/mg,19.91063946,1.884129258,6,11.30304496,0.988031431,6,5.279762075,2.244475429,check SD is not SE
+s44,protein thiols,nmol/mg,26.53146367,0.962393139,6,39.5722378,1.823725686,6,-8.25267505,4.889953327,Check SD seems low
+s44,alanine-aminotransferase (ALT) activity,ug/30min/mg,34.09217355,2.993340753,6,14.42444996,3.222982745,6,5.834939184,2.11159307,fine
+s44,asparatate-aminotransferase (AST) activity,ug/hr/mg,43.94410376,3.501685751,6,16.28070872,3.431610642,6,7.363012094,3.111804744,Check SD seems low
+s44,protein oxidation,nmol/mg,2.134792955,0.234119586,6,0.940256953,0.067214101,6,6.399707035,3.919386963,fine
+s44,protein oxidation,nmol/mg,2.145105473,0.14693511,6,1.355354082,0.077172276,6,6.209579017,2.949032803,fine
+s44,protein thiols,nmol/mg,100.7364103,2.173316279,6,125.8203185,4.126499957,6,-7.018584326,3.651233367,Check SD seems low
+s44,protein thiols,nmol/mg,105.0359168,1.661926825,6,125.8203185,4.126499957,6,-6.096935289,3.224472753,Check SD seems low
+s44,alanine-aminotransferase (ALT) activity,ug/30min/mg,35.97025433,2.031519473,6,20.24219179,0.300646916,6,9.994169918,9.969378946,Check
+s44,asparatate-aminotransferase (AST) activity,ug/hr/mg,59.81815359,1.509922374,6,20.90626208,3.58297715,6,13.05984533,13.08739699,Check
+s44,asparatate-aminotransferase (AST) activity,ug/hr/mg,46.43603746,3.871561581,6,20.90626208,3.58297715,6,6.315576697,2.406244991,fine
+s46,"glucose-6-phosphate deyhdrogenase activity, enzyme that converst NADP to NADPH; may provide a pathway for glucose oxidation that is coupled to ATP production",unitless,571.5,55.9,9,294.7,33.7,9,5.710886502,1.491350449,fine
+s56,superoxide dismutase,U/mg,0.0371499,0.020128836,5,0.223015722,0.012712999,5,-9.96663025,7.854680174,Check
+s56,superoxide dismutase,U/mg,0.032147704,0.010910264,5,0.150918809,0.024002647,5,-5.750798593,3.460646067,fine
+s56,oxidative damage to proteins,nmol/mg,0.084463862,0.015184583,5,0.003504958,0.003036949,5,6.674287868,5.656402766,fine
+s60,reactive oxygen species,uM,1100.269402,34.02888104,16,616.516541,60.51718557,16,9.604990781,2.085971571,CHECK
+s60,glutathione peroxidase,ng/ml,740.0549967,4.693745199,16,850.0913788,1.1734363,16,-31.35180257,29.26994577,CHECK THIS ONE CAREFULLY. SD vs SE mix up.
+s60,adenosine triphosphatase,ng/ml,137.7253482,1.1734363,16,175.9723318,5.867269496,16,-8.81160309,2.53005276,CHECK
+s63,"reactive oxygen metabolites, oxidative damage",mol/L,0.516460838,0.022996912,10,0.704245727,0.021677431,10,-8.047265233,2.027334769,CHECK
+s64,malondialdehyde concentration,nmol/mg,8.433685928,0.393470684,6,3.224940372,0.277744013,6,14.11310979,11.47579404,CHECK
+s73,peroxisome proliferator-activated receptor-a,unitless,0.120390063,0.002519418,4,0.040418641,0.015322557,4,6.326433849,6.995343507,CHECK
+s74,uncoupling protein mRNA relative expression,unitless,0.285714286,0.024743583,3,0.985714286,0.057735027,3,-12.57470397,30.1663,Just check these are SD and not SE
+s74,"peroxisome proliferator-activated receptor gamma coactivator-1alpha, 'thermogenic' gene",unitless,0.480952381,0.041239305,3,0.985714286,0.057735027,3,-8.027576212,9.902548895,Fine
+s74,uncoupling protein mRNA relative expression,unitless,0.3,0.057735027,3,1,0.032991444,3,-11.87832185,23.18273171,"probably fine, but worth a check given the effect size"
+s79,catalase,U/mg,0.043548387,0.075428019,3,2.874193548,0.276569403,3,-11.14185153,28.03552776,Check mean for t1
+s79,"glutathione peroxidase (GPx) activity, converts H2O2 to H20",U/mg,2.159851301,0.135215862,3,4.996282528,0.450719541,3,-6.801546647,10.81309469,fine
+s79,malondialdehyde,nmol/mg,0.229530201,0.041848207,3,0.018120805,0.010462052,3,5.530164062,7.799098305,fine
+s88,glutathione (GSH),ug/mg,23.28767123,1.369863014,3,51.23287671,4.657534247,3,-6.495168274,10.0010879,fine
+s88,"phopholipase A2 activity, activation of cPLA2 initiates a series of inflammatory responses through lipoxygenases, cyclooxygenases or cytochrome p450 enzymes",nmol/min/mL,2.826923077,0.067307692,3,0.807692308,0.092548077,3,19.91042071,55.25721306,"Check, mean and SD seem quite different in t2 raletaive to t1"
+s88,ROS,percent,54,5,3,8,2,3,9.638598547,18.7023053,fine
+s88,involvement of complex I on ROS formation,unitless,1089,58,3,640,71,3,5.526275621,4.969438053,fine
+s88,involvement of complex II on ROS formation,unitless,1426,91,3,779,72,3,6.291528397,6.209669414,fine
+s88,mitochondrial membrane potential (MMP) collapse,percent change,21,3,3,4,2,3,5.320253236,5.061529831,fine
+s88,mitochondrial membrane potential (MMP) collapse,percent change,53,7,3,7,1,3,7.340537959,13.94281611,fine
+s88,mitochondrial swelling,percent,39,4,3,4,1,3,9.57852513,21.39729492,What does this trait mean? SD seems odd for these values
+s88,mitochondrial swelling,percent,29,3,3,2,1,3,9.634270227,20.02792838,What does this trait mean? SD seems odd for these values
+s88,succinate dehydrogenase activity; complex II,percent,84.97109827,1.734104046,3,100.1926782,1.156069364,3,-8.241176581,10.74548546,"Low SD for means, check"
+s99,"alkaline phosphate, here listed as a 'digestive enzyme' but described in previous paper by same lab group (Wen et al. 2017) as  playing role in phosphorus metabolism in aquatic animals, increases phophorylation and dephosphorylation mechanisms, might help mitochondrial function by liberating phosphates from organic molecules",U/mg,267.5229358,11.00917431,60,552.6605505,22.01834862,60,-16.27622627,1.560530239,"Low SD for means, check"
+s100,p-AKT:AKT,relative folds,0.586065574,0.050194462,6,0.930327869,0.070272247,6,-5.202172939,1.895460876,fine
+Recio2,cytochrome c oxidase histochemistry,CCO activty units,28.4,1.58113883,10,43.1,1.897366596,10,-8.06069721,2.085769457,SD seems low for means Check
+Recio7,ROS production,fluorescense (no units),142.32,8.62,6,52.44,4.77,6,11.90545357,9.48633787,Check. SD seems low for means
+Recio10,GSH - (MDA + carbonyls + GSSG),arbitrary units,0.670199516,0.087345402,13,2.55390852,0.362060779,13,-6.926323966,1.957800444,fine
+Wild3,SOD2 activity,% of CON,0.567014465,0.043854986,6,1.015318947,0.101185941,6,-5.304814043,2.464816779,fine
+Wild7,cytochrome c oxidase,U mg / FW,2.886996785,0,12,1.66029582,0.124039343,12,13.50281544,8.469364761,Check that sd_t1 is really 0.
+Wild7,CCO:CS ratio,ratio,0.727748457,0.13069012,12,0.242977905,0,12,5.064523062,1.34769972,"Check that sd_t2 is really a 0, very unlikely"
+Wild7,cytochrome c oxidase,U mg / FW,3.848437299,0.330771581,12,1.66029582,0.124039343,12,8.457087973,2.730043174,Fine
+N3,glucose-6-phosphate dehydrogenase,mU/mg protein,295,34,9,572,56,9,-5.69400233,1.478800536,Fine
+N3,oxidative stress index; calculated as 100*(2*GSSG/tGSH),%,54.40594059,10.0990099,9,8.861386139,2.178217822,9,5.936787493,2.265702136,Fine
+N7,"respiratory control ratio, calculated as ADP-stimulated over resting (total oxphos over leak in our terms)",unitless,1.996292708,0.436689364,5,8.00246619,0.941326089,5,-7.389106468,5.335630389,Fine
+N1,reactive oxygen species production,DCF flourensece intensity,75.50197271,10.20743844,5,29.01235366,4.264163266,5,5.365001875,3.187580914,Fine

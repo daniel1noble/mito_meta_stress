@@ -3,7 +3,7 @@
 #### --------------------------------------------------  ####
 
 	# Load the required libraries
-		source(here("R", "func.R"))
+		source("./R/func.R")
 		check_and_install("pacman")
 		pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, ggrepel, patchwork, rotl, ape, phytools, kutils)
 
@@ -36,7 +36,20 @@
 	# Check levels of categorical variables that are of major interest to make sure now spelling errors etc
 	unique(data$envirn_type)
 	unique(data$measurement_category) # Some issues here with gene expression. Probably just call "gene/protein expression"
-	unique(data$tissue_sum) # Some issues here "BAT" == "brown adipose tissue (BAT)" == "bat"; "whole body" == "whole animal"; "whole blood" == "blood"; "skeletal muscle" == "muscle"; what is "wat"? Is that bat?
+	unique(data$tissue_sum) # Some issues here "BAT" == "brown adipose tissue (BAT)" == "bat"; "whole body" == "whole animal"; "whole blood" == "blood"; "skeletal muscle" == "muscle"; 
+	unique(data$stage) # re-cat pre/post to both
+
+	# Fix the issues
+	data <- data %>%
+		mutate(measurement_category = ifelse(measurement_category == "gene expression", "gene/protein expression", measurement_category),
+				tissue_sum = ifelse(tissue_sum == "brown adipose tissue (BAT)", "BAT", tissue_sum),
+				tissue_sum = ifelse(tissue_sum == "bat", "BAT", tissue_sum),
+				tissue_sum = ifelse(tissue_sum == "whole animal", "whole body", tissue_sum),
+				tissue_sum = ifelse(tissue_sum == "whole blood", "blood", tissue_sum),
+				tissue_sum = ifelse(tissue_sum == "skeletal muscle", "muscle", tissue_sum),
+				tissue_sum = ifelse(tissue_sum == "adipose tissue", "adipose", tissue_sum),
+				     stage = ifelse(stage == "prenatal/postnatal", "both", stage))  %>% 
+		filter(!measurement_category == "non-mitochondrial metabolic pathways") # Drop non-metabolic pathways
 
 #### --------------------------------------------------  ####
 # 2. Phylogeny
@@ -96,18 +109,23 @@
 # 3. Effect size calculations
 #### --------------------------------------------------  ####
 
-	## Let's calculate the effect size. We are still a little uncertain on what to use, but for now, lets use standardised mean difference. Note here that the direction is REALLY important. We are creating a SMD where the mean of mean_t2 is subtracted from mean_t1. What this means is that 'positive' effects indicate the the mean of treatment 1 is GREATER than the mean of treatment 2. Same applies to the direction of the overall meta-analytic mean from models. 
+	## Let's calculate the effect size. We will use SMD with these data for a number of reasons. First, we have ratio data (RCR, gene expression which is relative etc) which can complicate lnRR interpretation. Second, we have lots of percentages. This is fine for lnRR and we can do a logit conversion but it can lead to some issues whereas SMD is a little more robust. We have also have some zero / negative values. Though these are rare, but are not defined with lnRR. 
 		
 		data <-  metafor::escalc(measure = "SMDH", m1i = mean_t1, m2i = mean_t2, 
 											sd1i = sd_t1, sd2i = sd_t2, 
 											n1i = n_t1 , n2i = n_t2, 
 						data = data, var.names = c("SMDH", "v_SMDH"))
 
-	# Log Response Ratio is quite intuitive to interpret but can only be used with ratio scale data which will not be useful for some measures.  
-		data <-  metafor::escalc(measure = "ROM", m1i = mean_t1, m2i = mean_t2, 
-											sd1i = sd_t1, sd2i = sd_t2, 
-											n1i = n_t1 , n2i = n_t2, 
-						data = data, var.names = c("ROM", "v_ROM"))
+	# Have a look at effect size distributions. Some large effects we need to check, but pretty typical 
+	plot_SMDH <- ggplot(data, aes(x = SMDH)) +
+						geom_histogram(bins = 30) +
+						labs(title = "Distribution of SMDH", x = "SMDH", y = "Frequency")
+
+	# Lets have a look at funnel plots. No obvious issues.
+	plot_funnel_SMDH <- metafor::funnel(data$SMDH, data$v_SMDH, yaxis="seinv")
+
+	# Lest have a look at the extreme effect sizes to see if there are problems
+		write.csv(data  %>% filter(abs(SMDH) > 5)  %>% dplyr::select(study, descrp_measure, units...42, mean_t1, sd_t1, n_t1, mean_t2, sd_t2, n_t2, SMDH, v_SMDH), here("output", "checks", "extreme_effects.csv"), row.names = FALSE)
 
 #### --------------------------------------------------  ####
 # 4. Data subsets
