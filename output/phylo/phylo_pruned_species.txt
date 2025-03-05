@@ -39,4 +39,4 @@ Lateolabrax maculatus
 Pampus argenteus
 Genypterus chilensis
 Gadus morhua
-Boreogadus saida
+Boreogadus saida 
