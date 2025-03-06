@@ -41,7 +41,7 @@
 
 	# Fix the issues
 	data <- data %>%
-		mutate(measurement_category = ifelse(measurement_category == "gene expression", "gene/protein expression", measurement_category),
+		mutate(measurement_category = ifelse(measurement_category == "gene expression", "gene/protein expression",  if_else(measurement_category == "oxidative stress", "oxidative damage", measurement_category)),
 				tissue_sum = ifelse(tissue_sum == "brown adipose tissue (BAT)", "BAT", tissue_sum),
 				tissue_sum = ifelse(tissue_sum == "bat", "BAT", tissue_sum),
 				tissue_sum = ifelse(tissue_sum == "whole animal", "whole body", tissue_sum),
