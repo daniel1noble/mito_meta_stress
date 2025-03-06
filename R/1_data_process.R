@@ -134,31 +134,31 @@
 	# Subset the temperature stress data and remove columns that we don't seem to need
 	temp_stress <- data %>%
 				filter(envirn_type == "temp")  %>% select(!c(Notes, CORT_values_available, CI95_t2, se_t2, CI95_t1, se_t1, num_tissues_types, admin, type, control_multiple_comparisons, measurement_methods))
-	write.csv(temp_stress, here("output","temp_stress.csv"), row.names = FALSE)
+	write.csv(temp_stress, here("output","data", "temp_stress.csv"), row.names = FALSE)
 	sum_temp_stress <- temp_stress  %>% summarise(k = n(), spp = n_distinct(species_phylo), studies = n_distinct(study))
 
 	# Subset the nutrition stress data and remove columns that we don't seem to need
 	nutri_stress <- data %>%
 				filter(envirn_type == "nutrition")  %>% select(!c(Notes, CORT_values_available, CI95_t2, se_t2, CI95_t1, se_t1, num_tissues_types, admin, type, control_multiple_comparisons, measurement_methods))
-	write.csv(nutri_stress, here("output","nutri_stress.csv"), row.names = FALSE)
+	write.csv(nutri_stress, here("output","data",  "nutri_stress.csv"), row.names = FALSE)
 	sum_nutri_stress <- nutri_stress  %>% summarise(k = n(), spp = n_distinct(species_phylo), studies = n_distinct(study))
 
 	# Subset the CORT stress data and remove columns that we don't seem to need
 	cort_stress <- data %>%
 				filter(envirn_type == "cort")  %>% select(!c(Notes, CI95_t2, se_t2, CI95_t1, se_t1, num_tissues_types, admin, type, control_multiple_comparisons, measurement_methods))
-	write.csv(cort_stress, here("output","cort_stress.csv"), row.names = FALSE)
+	write.csv(cort_stress, here("output", "data", "cort_stress.csv"), row.names = FALSE)
 	sum_cort_stress <- cort_stress  %>% summarise(k = n(), spp = n_distinct(species_phylo), studies = n_distinct(study))
 
 	# Subset the deprivation stress data and remove columns that we don't seem to need
 	deprive_stress <- data %>%
 				filter(envirn_type == "care deprivation")  %>% select(!c(Notes, CI95_t2, se_t2, CI95_t1, se_t1, num_tissues_types, admin, type, control_multiple_comparisons, measurement_methods))
-	write.csv(deprive_stress, here("output","deprive_stress.csv"), row.names = FALSE)
+	write.csv(deprive_stress, here("output", "data", "deprive_stress.csv"), row.names = FALSE)
 	sum_deprive_stress <- deprive_stress  %>% summarise(k = n(), spp = n_distinct(species_phylo), studies = n_distinct(study))
 
 	# Subset the disturbance stress data and remove columns that we don't seem to need
 	disturb_stress <- data %>%
 				filter(envirn_type == "disturbance")  %>% select(!c(Notes, CI95_t2, se_t2, CI95_t1, se_t1, num_tissues_types, admin, type, control_multiple_comparisons, measurement_methods))
-	write.csv(disturb_stress, here("output","disturb_stress.csv"), row.names = FALSE)
+	write.csv(disturb_stress, here("output", "data", "disturb_stress.csv"), row.names = FALSE)
 	sum_disturb_stress <- disturb_stress  %>% summarise(k = n(), spp = n_distinct(species_phylo), studies = n_distinct(study))
 
 	# Summary table of all teh data subsets
