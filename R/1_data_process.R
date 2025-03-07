@@ -5,7 +5,7 @@
 	# Load the required libraries
 		source("./R/func.R")
 		check_and_install("pacman")
-		pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, ggrepel, patchwork, rotl, ape, phytools, kutils)
+		pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, ggrepel, patchwork, rotl, ape, phytools, kutils, ggtree)
 
 	# Load the data
 		data <- read_excel(here("data", "mito_meta_data_merged_03032025.xlsx"))
@@ -67,7 +67,8 @@
 										if_else(species_phylo == "Tamiasciurus_hudonicus", "Tamiasciurus_hudsonicus",
 										if_else(species_phylo == "Cortunix_japonica", "Coturnix_japonica", 
 										if_else(species_phylo == "Symphysodon_aequifasciatus", "Symphysodon_aequifasciata",
-										if_else(species_phylo %in% c("Dicentrarachus_labrax", "Dichentrarchus_labrax"), "Dicentrarchus_labrax", species_phylo)))))))
+										if_else(species_phylo %in% c("Dicentrarachus_labrax", "Dichentrarchus_labrax"), "Dicentrarchus_labrax", species_phylo)))))),
+		 species_phylo2 = species_phylo)
 
 	 # Create a phylogeny. Looks like all species are matched and in the tree
 	 tol_subtree  <- rotl::tnrs_match_names(unique(data$species_phylo))
@@ -89,7 +90,7 @@
 	write.table(tree$tip.label, here("output", "phylo", "phylo_species.txt"), row.names = FALSE, col.names = FALSE)
 
 	 # Plot the tree
-	 plot_tree <- ape::plot.phylo(tree, cex = 0.5, label.offset = 0.5, show.tip.label = TRUE, edge.width = 1, type = "fan", no.margin = TRUE)
+	 plot_tree <- ggtree(tree) + geom_tiplab(aes(label = gsub("_", " ", label)), size = 7.5, offset = 0.1, hjust = 0, align = FALSE) + scale_x_continuous(expand = expansion(mult = c(0, 0.8))) 
 	 ggsave(here("output", "phylo", "phylo.png"), plot_tree, width = 22.888889, height = 8.604938)
 
 	 # Check the tree
