@@ -34,8 +34,8 @@ editor:
 #| error: false
 
 ## Loading some important packages. For first time use, unannotate and install the two packages first
-	source("../R/func.R")
-  check_and_install("pacman")
+	check_and_install(c("pacman", "here"))
+  source(here::here("R", "func.R"))
 	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, brms, ggrepel, patchwork)
 
 # Load the processed data. Keep object as list to hopefully make code more readable. 
@@ -43,6 +43,9 @@ editor:
         files <- list.files(here("output", "data"))
 	 data_lists <- lapply(paste0(path, "/", files), function(x) read.csv(x))
     names(data_lists) <- files
+
+# Bring in the phylogeny 
+  phylo <- read.tree(here("output", "phylo", "phylo_pruned_species.nwk"))
 
 # Set digits
   options(digits = 2)
@@ -73,14 +76,40 @@ After quantifying levels of heterogeneity in each of the different stressor data
 ### Thermal developmental impacts on mitochondrial function
 
 ```{r}
-#| label: thermal
+#| label: models
 #| echo: false
 #| warning: false
 #| error: false
 
 #### -------------------------------------------------- ####
-####  Thermal Stress ####
+####                 Multi-level Meta-analysis            
 #### -------------------------------------------------- ####
+
+for(i in 1:length(data_lists)){
+  # Add observation level random effect
+    data_lists[[i]]$obs <- 1:nrow(data_lists[[i]])
+
+  # Prune the tree to relevant taxa contained within this dataset.
+    tree_prune <- tree_checks(tree = phylo, dataCol = "species_phylo", data = data_lists[[i]], type ="prune")
+
+  # Calculate the phylogenetic correlation matrix
+    phylo_cor <- vcv(tree_prune, cor = TRUE)
+
+  # Fit the MLMA model for each dataset
+           MLMA_list <- list()
+      MLMA_list[[i]] <- rma.mv(SMDH ~ 1, V = v_SMDH, 
+                        random = list(~1| study, 
+                                      ~1| species_phylo, 
+                                      ~1| species_phylo2, 
+                                      ~1| tissue_sum,
+                                      ~1| obs),
+                         R = list(species_phylo = phylo_cor),
+                      test = "t", dfs = "contain", 
+                      data = data_lists[[i]])
+  
+  # Add names to make sure we keep track of which dataset is which model                      
+    names(MLMA_list) <- names(data_lists)[i]
+}
 
 
 ```
