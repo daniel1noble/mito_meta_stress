@@ -125,4 +125,19 @@ After quantifying levels of heterogeneity in each of the different stressor data
 
 ```
 
+```{r, heterogeneity}
+#| label: heterogeneity
+#| echo: false
+#| warning: false
+#| error: false
+
+#### -------------------------------------------------- ####
+# 2.            Heterogeneity and Prediction Intervals
+#### -------------------------------------------------- ####
+
+  # Create table of I2 Total and I2 for each level
+  i2  <- do.call("rbind", lapply(MLMA_list, function (x) orchaRd::i2_ml(x)))
+
+```
+
 # References
