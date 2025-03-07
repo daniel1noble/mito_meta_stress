@@ -51,8 +51,8 @@ editor:
 # Methods
 ### *Effect size*
 
-We calculated the standardized mean difference, assuming heteroscedastic population variances ($SMD_{H}$) [@Bonett2008; @Bonett2009], along with its associated sampling error as our effect size metric using the *escalc* function in the *metafor* package (vers. `r utils::packageVersion("metafor")`) [@Viechtbauer2010-fn] in R (vers.
-`r paste0(R.Version()$major, ".", R.Version()$minor)`). We choose to use $SMD_{H}$ as our effect size because our data: 1) contained substantial amounts of ratio data (e.g., respiratory control ratios, RCR) which makes interpretation with alternative effect size measures, such as log response ratio, challenging; 2) contained non-ratio-scale data and 3) We calculated $SMD_{H}$ as the mean difference between control and treatment groups divided by the pooled standard deviation. A small sample correction was used to account for possible bias resulting from effect sizes calculated with small sample sizes.
+To quantify the impacts of developmental stress on mitochondrial function we calculated the standardized mean difference, assuming heteroscedastic population variances ($SMD_{H}$) [@Bonett2008; @Bonett2009] along with its associated sampling error. We used the *escalc* function of the *metafor* package (vers. `r utils::packageVersion("metafor")`) [@Viechtbauer2010-fn] in R (vers.
+`r paste0(R.Version()$major, ".", R.Version()$minor)`) which implements a correction to account for possible bias resulting from effect sizes calculated with small sample sizes [@Borenstein2009]. We choose to use $SMD_{H}$ as our effect size because our data: 1) contained substantial amounts of ratio data (e.g., respiratory control ratios, RCR, relative gene expression) which makes interpretation with alternative effect size measures, such as log response ratio, challenging; 2) percentages and zero measurement variables and 3) skewed measurement variables. $SMD_{H}$ is more robust to these types of measurement variables. We calculated $SMD_{H}$ as the mean difference between control and treatment groups divided by the pooled standard deviation. As such, positive effect sizes represent situations where the mean of the experimental group was larger than the control group. Given the diversity of measurement variables we paid particular attention to effect size direction to ensure that positive increase of means all represent increased in mitochondrial function or efficiency. Any measurement type with teh opposite meaning was 'coined' (multiplied by -1) to ensure the meaning was consistent. For example, positive mean increases in rates of oxidative phosphorylation (OXPHOS) indicate higher mitochondrial function whereas negative RCRs calculated as XXX, indicate greater mitochondrial efficiency and thus better mitochondrial function.
 
 ### *Meta-Analysis*
 
@@ -60,9 +60,9 @@ We analysed our data using multilevel meta-analytic (MLMA) and meta-regression (
 
 #### *Multi-level Meta-analysis (MLMA) Models*
 
-Using data subsets for each of our major stressor categories, we first fit multi-level meta-analysis (MLMA) models (i.e., intercept-only models) with $SMD_{H}$, that included study, species, trait type, and phylogeny as random effects to account for non-independence and identify sources of variability.  Our MLMA models allowed us to partition variation in $SMD_{H}$ among these key sources while accounting for total sampling variance. This allowed us to calculate the proportion of total heterogeneity [i.e., $I_{total}^2$; *sensu* @Nakagawa2012-oc; @Noble2022-ty] along with various $I^2$ metrics describing the proportion of variance explained by each random effect level [@Nakagawa2012-oc]. As a second measure of heterogeneity we also present 95% prediction intervals which describe the expected distribution of effects that are expected from future studies [@Nakagawa2021-ls; @Noble2022-ty].
+Using data subsets for each of our major stressor categories, we first fit multi-level meta-analysis (MLMA) models (i.e., intercept-only models) with $SMD_{H}$, that included study, species, tissue type, and phylogeny as random effects to account for non-independence and identify sources of variability. Given *metafor* does not estimate a residual variance by default we also included an observation-level random effect in our models. Our MLMA models allowed us to partition variation in $SMD_{H}$ among these key sources while accounting for total sampling variance. This allowed us to calculate the proportion of total heterogeneity [i.e., $I_{total}^2$; *sensu* @Nakagawa2012-oc; @Noble2022-ty] along with various $I^2$ metrics describing the proportion of variance explained by each random effect level [@Nakagawa2012-oc]. As a second measure of heterogeneity we also present 95% prediction intervals which describe the expected distribution of effects that are expected from future studies [@Nakagawa2021-ls; @Noble2022-ty].
 
-A phylogeny was derived by first cross-checking taxa names using the Open Tree of Life (OTL) with the *rotl* package in R (vers. `r utils::packageVersion("rotl")`) [@Michonneau2016-if], and plotted using *ggtree* to visualize the tree (vers. `r utils::packageVersion("ggtree")`) [@Yu2017-wj]. We resolved any taxa names that were outdated or changed. Once names in the dataset and *rotl* database matched we exported taxa names and built a time calibrated phylogeny for the species in our dataset using TimeTree [timetree.org;  ]. We used the R packages *ape* (vers. `r utils::packageVersion("ape")`) [@Paradis2019-gx] and *phytools* (vers. `r utils::packageVersion("phytools")`) [@Revell2012-vq] to prune the tree for individual analyses and calculate phylogenetic correlation matrices used in meta-analytic models.
+A phylogeny was derived by first cross-checking taxa names using the Open Tree of Life (OTL) with the *rotl* package in R (vers. `r utils::packageVersion("rotl")`) [@Michonneau2016-if], and plotting taxa using *ggtree* to visualize the tree (vers. `r utils::packageVersion("ggtree")`) [@Yu2017-wj]. We resolved any taxa names that were outdated or changed. Once names in the dataset and *rotl* database matched we exported species names and built a time calibrated phylogeny for the species in our dataset using TimeTree [timetree.org;  @kumar2022timetree]. We used the R packages *ape* (vers. `r utils::packageVersion("ape")`) [@Paradis2019-gx] and *phytools* (vers. `r utils::packageVersion("phytools")`) [@Revell2012-vq] to prune the tree for individual analyses and calculate phylogenetic correlation matrices used in meta-analytic models.
 
 #### *Multi-level Meta-Regression (MLMR) Models*
 
@@ -70,5 +70,19 @@ After quantifying levels of heterogeneity in each of the different stressor data
 
 # Results
 
+### Thermal developmental impacts on mitochondrial function
+
+```{r}
+#| label: thermal
+#| echo: false
+#| warning: false
+#| error: false
+
+#### -------------------------------------------------- ####
+####  Thermal Stress ####
+#### -------------------------------------------------- ####
+
+
+```
 
 # References
