@@ -34,9 +34,9 @@ editor:
 #| error: false
 
 ## Loading some important packages. For first time use, unannotate and install the two packages first
-	check_and_install(c("pacman", "here"))
-  source(here::here("R", "func.R"))
-	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, brms, ggrepel, patchwork)
+	source(here::here("R", "func.R"))
+  check_and_install(c("pacman"))
+	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork)
 
 # Load the processed data. Keep object as list to hopefully make code more readable. 
          path <- here("output", "data")
@@ -75,42 +75,53 @@ After quantifying levels of heterogeneity in each of the different stressor data
 
 ### Thermal developmental impacts on mitochondrial function
 
-```{r}
-#| label: models
+```{r, mlma_models}
+#| label: mlma_models
 #| echo: false
 #| warning: false
 #| error: false
 
 #### -------------------------------------------------- ####
-####                 Multi-level Meta-analysis            
+# 1.            Multi-level Meta-analysis            
 #### -------------------------------------------------- ####
-
-for(i in 1:length(data_lists)){
-  # Add observation level random effect
-    data_lists[[i]]$obs <- 1:nrow(data_lists[[i]])
-
-  # Prune the tree to relevant taxa contained within this dataset.
-    tree_prune <- tree_checks(tree = phylo, dataCol = "species_phylo", data = data_lists[[i]], type ="prune")
-
-  # Calculate the phylogenetic correlation matrix
-    phylo_cor <- vcv(tree_prune, cor = TRUE)
-
-  # Fit the MLMA model for each dataset
-           MLMA_list <- list()
-      MLMA_list[[i]] <- rma.mv(SMDH ~ 1, V = v_SMDH, 
-                        random = list(~1| study, 
-                                      ~1| species_phylo, 
-                                      ~1| species_phylo2, 
-                                      ~1| tissue_sum,
-                                      ~1| obs),
-                         R = list(species_phylo = phylo_cor),
-                      test = "t", dfs = "contain", 
-                      data = data_lists[[i]])
   
-  # Add names to make sure we keep track of which dataset is which model                      
-    names(MLMA_list) <- names(data_lists)[i]
-}
+  rerun = FALSE
+  if(rerun){
+    
+    # Create list to store models
+    MLMA_list <- list()
+    
+    for(i in 1:length(data_lists)){
+      # Add observation level random effect
+        data_lists[[i]]$obs <- 1:nrow(data_lists[[i]])
 
+      # Prune the tree to relevant taxa contained within this dataset.
+        tree_prune <- tree_checks(tree = phylo, dataCol = "species_phylo", data = data_lists[[i]], type ="prune")
+
+      # Calculate the phylogenetic correlation matrix
+        phylo_cor <- vcv(tree_prune, cor = TRUE)
+
+      # Fit the MLMA model for each dataset
+          MLMA_list[[i]] <- rma.mv(SMDH ~ 1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo, 
+                                          ~1| species_phylo2, 
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", dfs = "contain", 
+                          data = data_lists[[i]])
+      
+      # Add names to make sure we keep track of which dataset is which model                      
+        names(MLMA_list)[i] <- names(data_lists)[i]
+    }
+      
+    # Save the model
+        saveRDS(MLMA_list, file = here("output", "models", "MLMA_list.rds"))
+
+  } else {
+        MLMA_list <- readRDS(here("output", "models", "MLMA_list.rds"))
+  }
 
 ```
 
