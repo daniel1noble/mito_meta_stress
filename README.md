@@ -18,5 +18,10 @@ The :page_facing_up: `results.qmd` file makes use of files within a number of fo
 
 ## 3. Data
 
-There are two data folders: 1) :open_file_folder: `data` and 2) :open_file_folder: `output/data/`. The `data/` folders contains the raw data, whereas the `output/data/` folder contains the processed data that is used in the `results.qmd` file. The processed data is created by running the `R` files in the `R` folder. The processed data is then used in the `results.qmd` file to generate the figures and analyses. These data files all contain the same columns aside form a few processed columns that are added in the processing steps and exported with the data subsets. The columns are as follows:
+There are two data folders: 1) :open_file_folder: `data` and 2) :open_file_folder: `output/data/`. The `data/` folders contains the raw data, whereas the `output/data/` folder contains the processed data that is used in the `results.qmd` file. 
 
+The processed data is created by running the `R` files in the `R` folder. The processed data is then used in the `results.qmd` file to generate the figures and analyses. These data files all contain the same columns aside form a few processed columns that are added in the processing steps and exported with the data subsets. The columns are as follows:
+
+| Column Name | Description |
+------------- | ------------
+Effect_Size_ID	| Unique identifiers for individual effect sizes.
