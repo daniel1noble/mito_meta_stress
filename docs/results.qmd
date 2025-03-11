@@ -149,15 +149,15 @@ eq  <- c(
   "n_{effects}",
   "n_{species}",
   "n_{study}",
-  "I^2_{total}",
-  "I^2_{study}",
-  "I^2_{phylogeny}",
-  "I^2_{species}",
-  "I^2_{tissue}",
-  "I^2_{obs}"
+  "I^2_{total} (\\%)",
+  "I^2_{study} (\\%)",
+  "I^2_{phylogeny} (\\%)",
+  "I^2_{species} (\\%)",
+  "I^2_{tissue} (\\%)",
+  "I^2_{obs} (\\%)"
 )
 
-flextable(i2)  %>% compose(part = "header", value = as_paragraph(as_equation(eq))) %>% 
+flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq))) %>% 
   autofit()
 ```
 

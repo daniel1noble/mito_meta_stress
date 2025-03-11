@@ -50,3 +50,13 @@ my_theme  <- function() {
       return(ape::drop.tip(tree, species_list1))
     }
   }
+
+#' @title round_df
+#' @description Rounds all numeric columns in a dataframe
+#' @param df Dataframe
+#' @param digits Number of digits to round to
+#' @return Dataframe with numeric columns rounded
+round_df <- function(df, digits = 2) {
+  df[] <- lapply(df, function(x) if (is.numeric(x)) round(x, digits) else x)
+  return(df)
+}
