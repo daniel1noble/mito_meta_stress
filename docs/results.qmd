@@ -1,5 +1,4 @@
 ---
-title: "Results"
 bibliography: ../bib/refs.bib
 csl: ../bib/biological-reviews.csl
 format:
