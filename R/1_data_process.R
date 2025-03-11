@@ -49,13 +49,13 @@
 				tissue_sum = ifelse(tissue_sum == "skeletal muscle", "muscle", tissue_sum),
 				tissue_sum = ifelse(tissue_sum == "adipose tissue", "adipose", tissue_sum),
 				     stage = ifelse(stage == "prenatal/postnatal", "both", stage))  %>% 
-		filter(!measurement_category == "non-mitochondrial metabolic pathways") # Drop non-metabolic pathways
+		filter(!measurement_category == "non-mitochondrial metabolic pathways")  %>% data.frame() # Drop non-metabolic pathways
 
 #### --------------------------------------------------  ####
 # 2. Phylogeny
 #### --------------------------------------------------  ####
 	 
-	 # From these data we will create a phylogeny which we can trim based on data subsets. Create species first
+	# From these data we will create a phylogeny which we can trim based on data subsets. Create species first
 	 data <- data %>%
 		 mutate(species_phylo = paste(genus, species, sep = "_"),
 		 		species_phylo = ifelse(species_phylo == "Meleagris_gallopavo domesitcus", "Meleagris_gallopavo", species_phylo))
@@ -68,7 +68,7 @@
 										if_else(species_phylo == "Cortunix_japonica", "Coturnix_japonica", 
 										if_else(species_phylo == "Symphysodon_aequifasciatus", "Symphysodon_aequifasciata",
 										if_else(species_phylo %in% c("Dicentrarachus_labrax", "Dichentrarchus_labrax"), "Dicentrarchus_labrax", species_phylo)))))),
-		 species_phylo2 = species_phylo)
+		 species_phylo2 = species_phylo) 
 
 	 # Create a phylogeny. Looks like all species are matched and in the tree
 	 tol_subtree  <- rotl::tnrs_match_names(unique(data$species_phylo))
@@ -86,8 +86,8 @@
 		tree_checks(data, tree, dataCol = "species_phylo")
 	 
 	 # Write final tree
-	 write.tree(tree, here("output", "phylo", "phylo.tre"))
-	write.table(tree$tip.label, here("output", "phylo", "phylo_species.txt"), row.names = FALSE, col.names = FALSE)
+	 	write.tree(tree, here("output", "phylo", "phylo.tre"))
+		write.table(tree$tip.label, here("output", "phylo", "phylo_species.txt"), row.names = FALSE, col.names = FALSE)
 
 	 # Plot the tree
 	 plot_tree <- ggtree(tree) + geom_tiplab(aes(label = gsub("_", " ", label)), size = 7.5, offset = 0.1, hjust = 0, align = FALSE) + scale_x_continuous(expand = expansion(mult = c(0, 0.8))) 
