@@ -158,7 +158,7 @@ eq  <- c(
 )
 
 flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq))) %>% 
-  autofit()
+  width(j = c(1:10), width = c(1.5, rep(0.65, 9)))
 ```
 
 
