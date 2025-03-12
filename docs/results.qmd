@@ -35,7 +35,7 @@ editor:
 ## Loading some important packages. For first time use, unannotate and install the two packages first
 	source(here::here("R", "func.R"))
   check_and_install(c("pacman"))
-	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, ENmisc)
+	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, rotl)
 
 # Load the processed data. Keep object as list to hopefully make code more readable. 
          path <- here("output", "data")
@@ -71,8 +71,6 @@ A phylogeny was derived by first cross-checking taxa names using the Open Tree o
 After quantifying levels of heterogeneity in each of the different stressor datasets, we fit a series of multi-level meta-regression (MLMR) models to test our key questions. In all models, we included the same random effects as we used in our MLMA models, however, MLMR models differed in the moderators included because each stressor type had unique sources of heterogeneity that we expected would explain effect variance. 
 
 # Results
-
-### Thermal developmental impacts on mitochondrial function
 
 ```{r, mlma_models}
 #| label: mlma_models
@@ -166,20 +164,20 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
 
 ## Corticosterone developmental impacts on mitochondrial function
 
-Overall, exposure to corticosterone during development had a positive, but non-significant, impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`). However, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; @tbl-heterogeneity), with `r i2[1,"I2_tissue_sum"]`% of variation being driven by the type of tissue measured ($I^2_{tissue}$; @tbl-heterogeneity) with little to no variation explained by species/phylogeny and very small amount of between study variation (@tbl-heterogeneity). 
+Overall, exposure to corticosterone during development had a positive, but non-significant, impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a). However, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; @tbl-heterogeneity), with `r i2[1,"I2_tissue_sum"]`% of variation being driven by the type of tissue measured ($I^2_{tissue}$; @tbl-heterogeneity) with little to no variation explained by species/phylogeny and very small amount of between study variation (@tbl-heterogeneity). 
 
 ## Social deprivation developmental impacts on mitochondrial function
-Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; @tbl-heterogeneity), with only a small amount of variation across studies ($I^2_{study}$ = `r i2[2,"I2_study"]`%) and little to no variation explained by species/phylogeny (@tbl-heterogeneity). 
+Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; @tbl-heterogeneity), with only a small amount of variation across studies ($I^2_{study}$ = `r i2[2,"I2_study"]`%) and little to no variation explained by species/phylogeny (@tbl-heterogeneity). 
 
 ## Disturbance developmental impacts on mitochondrial function
 
-Disturbance during development had a positive impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[3]])$estimate`, 95% CI = `r coef(summary_list[[3]])$ci.lb` to `r coef(summary_list[[3]])$ci.ub`, $p$ = `r coef(summary_list[[3]])$pval`). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[3]])$pi.lb` to `r predict(summary_list[[3]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%) and species ($I^2_{study}$ = `r i2[3,"I2_species_phylo2"]`%) (@tbl-heterogeneity).
+Disturbance during development had a positive impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[3]])$estimate`, 95% CI = `r coef(summary_list[[3]])$ci.lb` to `r coef(summary_list[[3]])$ci.ub`, $p$ = `r coef(summary_list[[3]])$pval`; [@fig-orchard_int]c). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[3]])$pi.lb` to `r predict(summary_list[[3]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%) and species ($I^2_{study}$ = `r i2[3,"I2_species_phylo2"]`%) (@tbl-heterogeneity).
 
 ## Nutrition developmental impacts on mitochondrial function
-Nutritional stress during development also had limited impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`), but as expected, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[4,"I2_study"]`%; @tbl-heterogeneity).
+Nutritional stress during development also had limited impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d), but as expected, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[4,"I2_study"]`%; @tbl-heterogeneity).
 
 ## Temperature developmental impacts on mitochondrial function
-Temperature stress had a positive impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[5]])$estimate`, 95% CI = `r coef(summary_list[[5]])$ci.lb` to `r coef(summary_list[[5]])$ci.ub`, $p$ = `r coef(summary_list[[5]])$pval`) with effect heterogeneity being around `r i2[5,"I2_Total"]`% (95% Prediction Intervals: `r predict(summary_list[[5]])$pi.lb` to `r predict(summary_list[[5]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[5,"I2_study"]`%)(@tbl-heterogeneity).
+Temperature stress had a positive impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[5]])$estimate`, 95% CI = `r coef(summary_list[[5]])$ci.lb` to `r coef(summary_list[[5]])$ci.ub`, $p$ = `r coef(summary_list[[5]])$pval`; [@fig-orchard_int]e) with effect heterogeneity being around `r i2[5,"I2_Total"]`% (95% Prediction Intervals: `r predict(summary_list[[5]])$pi.lb` to `r predict(summary_list[[5]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[5,"I2_study"]`%)(@tbl-heterogeneity).
 
 ```{r, fig-orchard_int}
 #| label: fig-orchard_int
@@ -188,16 +186,19 @@ Temperature stress had a positive impact on mitochondrial function ($SMD_{H}$ = 
 #| error: false
 #| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category."
   
-    plots  <- lapply(MLMA_list, function(x) orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study") +  
-                                                ylim(-5,5) + scale_x_discrete(labels = "Overall") +
+    plots  <- lapply(MLMA_list, function(x) orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2) +  
+                                                ylim(-10,10) + scale_x_discrete(labels = "Overall") +
                                                 theme_classic() + theme(legend.position = "top",
                                                                         axis.title = element_text(size = 18),
                                                                         axis.text = element_text(size = 12),
-                                                                        plot.tag = element_text(size = 24)))
+                                                                        plot.tag = element_text(size = 24)) + scale_color_manual(values = "black") + scale_fill_manual(values = "gray"))
 
 
-    (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation") + plots[[3]] + ggtitle("Disturbance")) / ( plots[[4]] + ggtitle("Nutrition") + plots[[5]] + ggtitle("Temperature")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    p_overall <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) / (plots[[5]] + ggtitle("Temperature")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig1.png"), p_overall, width = 8.6, height = 11)
 
+    p_overall <- image_read(here("output", "figures", "fig1.png"))
+    p_overall
 ```
 
 # References
