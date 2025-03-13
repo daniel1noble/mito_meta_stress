@@ -161,7 +161,6 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
   width(j = c(1:10), width = c(1.5, rep(0.65, 9)))
 ```
 
-
 ```{r, fig-phylo}
 #| label: fig-phylo
 #| echo: false
@@ -176,12 +175,14 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
     theme_tree2() + labs(x = "Millions of Years (MY)") +
     theme(legend.position = "none") 
 
-    ggsave(fig_phylo, here("output", "figures", "phylo.png"), width = 6, height = 9)
+    ggsave(filename = here("output", "figures", "phylo.png"), fig_phylo, width = 6, height = 9)
 
   p_phylo <- image_read(here("output", "figures", "phylo.png"))
   p_phylo
 
 ```
+
+In total, we collected data from `r sum(i2$k)` effect sizes across 42 species (@fig-phylo) and 123 studies across the different stressors (@tbl-heterogeneity). 
 
 ## Corticosterone developmental impacts on mitochondrial function
 
@@ -192,7 +193,7 @@ Social deprivation during development had a negative impact on mitochondrial fun
 
 ## Disturbance developmental impacts on mitochondrial function
 
-Disturbance during development had a positive impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[3]])$estimate`, 95% CI = `r coef(summary_list[[3]])$ci.lb` to `r coef(summary_list[[3]])$ci.ub`, $p$ = `r coef(summary_list[[3]])$pval`; [@fig-orchard_int]c). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[3]])$pi.lb` to `r predict(summary_list[[3]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%) and species ($I^2_{study}$ = `r i2[3,"I2_species_phylo2"]`%) (@tbl-heterogeneity).
+Disturbance during development had a positive impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[3]])$estimate`, 95% CI = `r coef(summary_list[[3]])$ci.lb` to `r coef(summary_list[[3]])$ci.ub`, $p$ = `r coef(summary_list[[3]])$pval`; [@fig-orchard_int]c). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[3]])$pi.lb` to `r predict(summary_list[[3]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%) and species ($I^2_{species}$ = `r i2[3,"I2_species_phylo2"]`%) (@tbl-heterogeneity).
 
 ## Nutrition developmental impacts on mitochondrial function
 Nutritional stress during development also had limited impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d), but as expected, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[4,"I2_study"]`%; @tbl-heterogeneity).
