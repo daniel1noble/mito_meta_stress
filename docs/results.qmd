@@ -162,6 +162,27 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
 ```
 
 
+```{r, fig-phylo}
+#| label: fig-phylo
+#| echo: false
+#| warning: false
+#| error: false
+#| fig-cap: "Phylogeny of species included in the meta-analysis."
+  
+  phylo$tip.label <- gsub("_", " ", phylo$tip.label)
+
+  fig_phylo <- ggtree(phylo, layout = "rectangular", branch.length = "none") + 
+    geom_tiplab(size = 4, offset = 7, hjust = 1, align = FALSE, fontface = "italic") + 
+    theme_tree2() + labs(x = "Millions of Years (MY)") +
+    theme(legend.position = "none") 
+
+    ggsave(fig_phylo, here("output", "figures", "phylo.png"), width = 8.6, height = 11)
+
+  p_phylo <- image_read(here("output", "figures", "phylo.png"))
+  p_phylo
+
+```
+
 ## Corticosterone developmental impacts on mitochondrial function
 
 Overall, exposure to corticosterone during development had a positive, but non-significant, impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a). However, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; @tbl-heterogeneity), with `r i2[1,"I2_tissue_sum"]`% of variation being driven by the type of tissue measured ($I^2_{tissue}$; @tbl-heterogeneity) with little to no variation explained by species/phylogeny and very small amount of between study variation (@tbl-heterogeneity). 
