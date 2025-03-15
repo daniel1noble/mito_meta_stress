@@ -77,4 +77,7 @@ CI95_t2	| confidence interval of mean in treatment 2, se calculated from this as
 sample_dependent	| A classifier that identified if different rows in the dataset are traits measured on the SAME SAMPLE of animals. If the same sample then they share the same number
 type	| classification of means, e.g., raw or least squares
 CORT_values_available	| yes' if there are data on CORT levels in response to a manipulation. For example, if a study chased fish as a disturbance and measure the effect of this treatment on CORT in addition to mito parameters then this is a 'yes;' if there are no CORT values = "NA"
+species_phylo | Species name for building the phylogeny
+species_phylo2 | Species name for inclusion of the species-level (non phylogenetic) random effect
+obs | Observation number for including a residual random effect to estimate residual variance
 notes	| anything that may be important
