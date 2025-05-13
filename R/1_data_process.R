@@ -8,7 +8,7 @@
 		pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, ggrepel, patchwork, rotl, ape, phytools, kutils, ggtree)
 
 	# Load the data
-		data <- read_excel(here("data", "mito_meta_data_merged_03032025.xlsx"))
+		data <- read_excel(here("data", "mito_meta_data_merged_11052025.xlsx"))
 
 	# Check the data
 		str(data)
@@ -48,6 +48,8 @@
 				tissue_sum = ifelse(tissue_sum == "whole blood", "blood", tissue_sum),
 				tissue_sum = ifelse(tissue_sum == "skeletal muscle", "muscle", tissue_sum),
 				tissue_sum = ifelse(tissue_sum == "adipose tissue", "adipose", tissue_sum),
+				tissue_sum = ifelse(tissue_sum == "serum", "plasma/serum", tissue_sum),
+				tissue_sum = ifelse(tissue_sum == "erthrocyte", "erythrocyte", tissue_sum),
 				     stage = ifelse(stage == "prenatal/postnatal", "both", stage))  %>% 
 		filter(!measurement_category == "non-mitochondrial metabolic pathways")  %>% data.frame() # Drop non-metabolic pathways
 
@@ -132,12 +134,6 @@
 # 4. Data subsets
 #### --------------------------------------------------  ####
 
-	# Subset the temperature stress data and remove columns that we don't seem to need
-	temp_stress <- data %>%
-				filter(envirn_type == "temp")  %>% select(!c(Notes, CORT_values_available, CI95_t2, se_t2, CI95_t1, se_t1, num_tissues_types, admin, type, control_multiple_comparisons, measurement_methods))
-	write.csv(temp_stress, here("output","data", "temp_stress.csv"), row.names = FALSE)
-	sum_temp_stress <- temp_stress  %>% summarise(k = n(), spp = n_distinct(species_phylo), studies = n_distinct(study))
-
 	# Subset the nutrition stress data and remove columns that we don't seem to need
 	nutri_stress <- data %>%
 				filter(envirn_type == "nutrition")  %>% select(!c(Notes, CORT_values_available, CI95_t2, se_t2, CI95_t1, se_t1, num_tissues_types, admin, type, control_multiple_comparisons, measurement_methods))
@@ -163,6 +159,6 @@
 	sum_disturb_stress <- disturb_stress  %>% summarise(k = n(), spp = n_distinct(species_phylo), studies = n_distinct(study))
 
 	# Summary table of all teh data subsets
-	summary_table <- rbind(sum_temp_stress, sum_nutri_stress, sum_cort_stress, sum_deprive_stress, sum_disturb_stress)
-	summary_table <- summary_table %>% mutate(envirn_type = c("Temperature", "Nutrition", "CORT", "Care Deprivation", "Disturbance"))  %>% select(envirn_type, everything())
+	summary_table <- rbind(sum_nutri_stress, sum_cort_stress, sum_deprive_stress, sum_disturb_stress)
+	summary_table <- summary_table %>% mutate(envirn_type = c("Nutrition", "CORT", "Care Deprivation", "Disturbance"))  %>% select(envirn_type, everything())
 	write.csv(summary_table, here("output", "tables", "data_sum_table.csv"), row.names = FALSE)
