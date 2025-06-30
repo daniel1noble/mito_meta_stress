@@ -206,8 +206,6 @@ Disturbance during development had a positive impact on mitochondrial function (
 ## Nutrition developmental impacts on mitochondrial function
 Nutritional stress during development also had limited impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d), but as expected, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[4,"I2_study"]`%; @tbl-heterogeneity).
 
-## Temperature developmental impacts on mitochondrial function
-Temperature stress had a positive impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[5]])$estimate`, 95% CI = `r coef(summary_list[[5]])$ci.lb` to `r coef(summary_list[[5]])$ci.ub`, $p$ = `r coef(summary_list[[5]])$pval`; [@fig-orchard_int]e) with effect heterogeneity being around `r i2[5,"I2_Total"]`% (95% Prediction Intervals: `r predict(summary_list[[5]])$pi.lb` to `r predict(summary_list[[5]])$pi.ub`; @tbl-heterogeneity), with a moderate amount of variation being driven by differences between studies ($I^2_{study}$ = `r i2[5,"I2_study"]`%)(@tbl-heterogeneity).
 
 ```{r, fig-orchard_int}
 #| label: fig-orchard_int
@@ -224,7 +222,7 @@ Temperature stress had a positive impact on mitochondrial function ($SMD_{H}$ = 
                                                                         plot.tag = element_text(size = 24)) + scale_color_manual(values = "black") + scale_fill_manual(values = "gray"))
 
 
-    p_overall <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) / (plots[[5]] + ggtitle("Temperature")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    p_overall <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
     ggsave(here("output", "figures", "fig1.png"), p_overall, width = 8.6, height = 11)
 
     p_overall <- image_read(here("output", "figures", "fig1.png"))
