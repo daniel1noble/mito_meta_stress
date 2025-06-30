@@ -35,7 +35,7 @@ editor:
 ## Loading some important packages. For first time use, unannotate and install the two packages first
 	source(here::here("R", "func.R"))
   check_and_install(c("pacman"))
-	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, rotl)
+	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, equatags, rotl)
 
 # Load the processed data. Keep object as list to hopefully make code more readable. 
          path <- here("output", "data")
@@ -97,8 +97,7 @@ After quantifying levels of heterogeneity in each of the different stressor data
       # Calculate the phylogenetic correlation matrix
         phylo_cor <- vcv(tree_prune, cor = TRUE)
 
-      # Fit the MLMA model for each dataset. Vary random effects structure based on levels of the random effects in the dataset.
-
+      # Fit the MLMA model for each dataset. Vary random effects structure based on levels of the random effects in the dataset
      
       if(i == 2){
           MLMA_list[[i]] <- rma.mv(SMDH ~ 1, V = v_SMDH, 
@@ -106,7 +105,7 @@ After quantifying levels of heterogeneity in each of the different stressor data
                                           ~1| obs),
                           test = "t",  
                           data = data_lists[[i]])
-      } else{
+      } else {
           MLMA_list[[i]] <- rma.mv(SMDH ~ 1, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
@@ -117,6 +116,7 @@ After quantifying levels of heterogeneity in each of the different stressor data
                           test = "t", 
                           data = data_lists[[i]])
       }
+      
       # Add names to make sure we keep track of which dataset is which model                      
         names(MLMA_list)[i] <- names(data_lists)[i]
     }
@@ -149,9 +149,9 @@ After quantifying levels of heterogeneity in each of the different stressor data
   # Create table of I2 Total and I2 for each level
   i2  <- data.frame(do.call("rbind", lapply(MLMA_list, function (x) orchaRd::i2_ml(x))))
   i2  <- cbind(size, i2)
-i2$Stressor <- c("Corticosterone", "Social Deprevation", "Disturbance", "Nutrition", "Temperature")
+i2$Stressor <- c("Corticosterone", "Social Deprevation", "Disturbance", "Nutrition")
 i2  <- i2  %>% select(Stressor, everything())
-
+i2[2,7:9] <- NA # Social deprivation does not have phylogeny or species phylo2 random effects
 eq  <- c(
   "Stressor",
   "n_{effects}",
@@ -166,7 +166,7 @@ eq  <- c(
 )
 
 flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq))) %>% 
-  width(j = c(1:10), width = c(1.5, rep(0.65, 9)))
+  width(j = c(1:10), width = c(1.5, rep(0.65, 9)))  %>%  compose(j = 7:9, i = 2, value = as_paragraph("–"))
 ```
 
 ```{r, fig-phylo}
