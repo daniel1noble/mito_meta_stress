@@ -5,10 +5,12 @@
 	# Load the required libraries
 		source("./R/func.R")
 		check_and_install("pacman")
+		install.packages("readxl"); library(readxl)
+		devtools::install_github("daniel1noble/orchaRd")
 		pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, ggrepel, patchwork, rotl, ape, phytools, kutils, ggtree)
 
 	# Load the data
-		data <- read_excel(here("data", "mito_meta_data_merged_11052025.xlsx"))
+		data <- read_excel(here("data", "mito_meta_data_merged_27052025.xlsx"))
 
 	# Check the data
 		str(data)
@@ -128,7 +130,7 @@
 	plot_funnel_SMDH <- metafor::funnel(data$SMDH, data$v_SMDH, yaxis="seinv")
 
 	# Lest have a look at the extreme effect sizes to see if there are problems
-		write.csv(data  %>% filter(abs(SMDH) > 5)  %>% dplyr::select(study, descrp_measure, units...42, mean_t1, sd_t1, n_t1, mean_t2, sd_t2, n_t2, SMDH, v_SMDH), here("output", "checks", "extreme_effects.csv"), row.names = FALSE)
+		#write.csv(data  %>% filter(abs(SMDH) > 5)  %>% dplyr::select(study, descrp_measure, units...42, mean_t1, sd_t1, n_t1, mean_t2, sd_t2, n_t2, SMDH, v_SMDH), here("output", "checks", "extreme_effects.csv"), row.names = FALSE)
 
 #### --------------------------------------------------  ####
 # 4. Data subsets
@@ -162,3 +164,4 @@
 	summary_table <- rbind(sum_nutri_stress, sum_cort_stress, sum_deprive_stress, sum_disturb_stress)
 	summary_table <- summary_table %>% mutate(envirn_type = c("Nutrition", "CORT", "Care Deprivation", "Disturbance"))  %>% select(envirn_type, everything())
 	write.csv(summary_table, here("output", "tables", "data_sum_table.csv"), row.names = FALSE)
+

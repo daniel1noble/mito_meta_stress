@@ -7,6 +7,7 @@
 "Taeniopygia_guttata"
 "Tachycineta_bicolor"
 "Parus_major"
+"Larus_michahellis"
 "Aptenodytes_patagonicus"
 "Columba_livia"
 "Meleagris_gallopavo"

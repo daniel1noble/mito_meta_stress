@@ -7,6 +7,7 @@ Ovis aries
 Taeniopygia guttata
 Tachycineta bicolor
 Parus major
+Larus michahellis
 Aptenodytes patagonicus
 Columba livia
 Meleagris gallopavo
