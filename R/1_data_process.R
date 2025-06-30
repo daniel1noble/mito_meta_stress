@@ -132,6 +132,14 @@
 	# Lest have a look at the extreme effect sizes to see if there are problems
 		#write.csv(data  %>% filter(abs(SMDH) > 5)  %>% dplyr::select(study, descrp_measure, units...42, mean_t1, sd_t1, n_t1, mean_t2, sd_t2, n_t2, SMDH, v_SMDH), here("output", "checks", "extreme_effects.csv"), row.names = FALSE)
 
+# We need to correct the direction for mito measurements as they have a different meaning depending on whether one groups mean is higher than the other. 
+    head(data  %>%  filter(mito_efficiency_dir == 1)  %>% select(study, mito_efficiency_dir, SMDH, v_SMDH))
+    head(data  %>%  filter(mito_efficiency_dir == 0)  %>% select(study, mito_efficiency_dir, SMDH, v_SMDH))
+	head(data  %>%  filter(mito_efficiency_dir == "NA")  %>% select(study, mito_efficiency_dir, SMDH, v_SMDH))
+	
+	data  <- data %>%
+	            mutate(SMDH = ifelse(mito_efficiency_dir %in% c(0, "NA"), SMDH, -1*SMDH))
+
 #### --------------------------------------------------  ####
 # 4. Data subsets
 #### --------------------------------------------------  ####
@@ -164,4 +172,5 @@
 	summary_table <- rbind(sum_nutri_stress, sum_cort_stress, sum_deprive_stress, sum_disturb_stress)
 	summary_table <- summary_table %>% mutate(envirn_type = c("Nutrition", "CORT", "Care Deprivation", "Disturbance"))  %>% select(envirn_type, everything())
 	write.csv(summary_table, here("output", "tables", "data_sum_table.csv"), row.names = FALSE)
+
 
