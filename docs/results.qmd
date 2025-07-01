@@ -35,7 +35,7 @@ editor:
 ## Loading some important packages. For first time use, unannotate and install the two packages first
 	source(here::here("R", "func.R"))
   check_and_install(c("pacman"))
-	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, equatags, rotl)
+	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, equatags, rotl, rphylopic, ggimage, rmarkdown, knitr, kableExtra, janitor)
 
 # Load the processed data. Keep object as list to hopefully make code more readable. 
          path <- here("output", "data")
@@ -320,8 +320,6 @@ rerun = FALSE
   robust_RelDur <- lapply(MLMR_list_RelDur, function(x) robust(x, cluster = x$data[,"study"]))
 ```
 
-
-
 ```{r, taxa}
 #| label: taxa
 #| echo: false
@@ -439,6 +437,50 @@ Nutritional stress during development also had limited impact on mitochondrial f
 ```
 
 
+```{r, fig-orchard_taxa}
+#| label: fig-orchard_taxa
+#| echo: false
+#| warning: false
+#| error: false
+#| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category for the different measurement types."
+  
+    # get silouettes for taxa
+     
+        # Get a single image UUID for a species
+        uuid_mammal <- get_uuid(name = "Mus_musculus")
+        # Get the image for that UUID
+        mammal <- get_phylopic(uuid = uuid_mammal)
+        
+        # Get a single image UUID for a species
+        uuid_bird<- get_uuid(name = "Taeniopygia_guttata")
+        # Get the image for that UUID
+        bird <- get_phylopic(uuid = uuid_bird)
+        #bird <- rotate_phylopic(img = bird, angle = 45)
+
+         #Get a single image UUID for a species
+        uuid_amphib <- get_uuid(name = "Triturus")
+        # Get the image for that UUID
+        amphib <- get_phylopic(uuid = uuid_amphib)
+
+          #Get a single image UUID for a species
+        uuid_fish <- get_uuid(name = "Dicentrarchus_labrax")
+        # Get the image for that UUID
+        fish <- get_phylopic(uuid = uuid_fish)
+
+    plots  <- lapply(MLMR_list_taxa, function(x) orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
+                                                      axis.text = element_text(size = 12),
+                                                       plot.tag = element_text(size = 24))) 
+                                                                        #+ #scale_color_manual(values = "black") + #scale_fill_manual(values = "gray"))
+
+
+    p_measure <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig3.png"), p_measure, width = 8.6, height = 11)
+
+    p_measure <- image_read(here("output", "figures", "fig3.png"))
+    p_measure
+```
+
+
 # References
 
 <br>
@@ -522,8 +564,8 @@ rerun = FALSE
 
 
     p_prepost <- (plots[[1]] + ggtitle("Corticosterone") + plots[[3]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig3.png"), p_prepost, width = 8.6, height = 11)
+    ggsave(here("output", "figures", "fig5.png"), p_prepost, width = 8.6, height = 11)
 
-    p_prepost <- image_read(here("output", "figures", "fig3.png"))
+    p_prepost <- image_read(here("output", "figures", "fig5.png"))
     p_prepost
 ```
