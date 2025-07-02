@@ -7,10 +7,10 @@
 		check_and_install("pacman")
 		install.packages("readxl"); library(readxl)
 		devtools::install_github("daniel1noble/orchaRd")
-		pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, ggrepel, patchwork, rotl, ape, phytools, kutils, ggtree)
+		pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, ggrepel, patchwork, rotl, ape, phytools, kutils, ggtree, janitor)
 
 	# Load the data
-		data <- read_excel(here("data", "mito_meta_data_merged_27052025.xlsx"))
+		data <- read_excel(here("data", "mito_meta_data_merged_02072025.xlsx"))
 
 	# Check the data
 		str(data)
@@ -138,7 +138,7 @@
 	head(data  %>%  filter(mito_efficiency_dir == "NA")  %>% select(study, mito_efficiency_dir, SMDH, v_SMDH))
 	
 	data  <- data %>%
-	            mutate(SMDH = ifelse(mito_efficiency_dir %in% c(0, "NA"), SMDH, -1*SMDH))
+	            mutate(SMDH = ifelse(mito_efficiency_dir %in% c(1, "NA"), SMDH, -1*SMDH))
 
 #### --------------------------------------------------  ####
 # 4. Data subsets
