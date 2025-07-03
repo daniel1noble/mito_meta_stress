@@ -46,6 +46,8 @@ editor:
 	 data_lists <- lapply(paste0(path, "/", files), function(x) read.csv(x))
     names(data_lists) <- files
 
+    data_lists  <- lapply(data_lists, function(x) mutate(x, depend = interaction(sample_depend, study)))
+
 # Bring in the phylogeny 
   phylo <- read.tree(here("output", "phylo", "phylo_pruned_species.nwk"))
 
@@ -112,6 +114,7 @@ We also fit a model comparing stage of development (i.e., pre- or post-natal) as
       if(i == 2){
           MLMA_list[[i]] <- rma.mv(SMDH ~ 1, V = v_SMDH, 
                             random = list(~1| study, 
+                                          ~1| depend,
                                           ~1| obs),
                           test = "t",  
                           data = data_lists[[i]])
@@ -120,6 +123,7 @@ We also fit a model comparing stage of development (i.e., pre- or post-natal) as
                             random = list(~1| study, 
                                           ~1| species_phylo,
                                           ~1| species_phylo2,
+                                          ~1| depend, 
                                           ~1| tissue_sum,
                                           ~1| obs),
                             R = list(species_phylo = phylo_cor),
@@ -154,14 +158,20 @@ We also fit a model comparing stage of development (i.e., pre- or post-natal) as
 #### -------------------------------------------------- ####
 
   # Create k and n columns for sample sizes
-  size  <- data.frame(do.call("rbind", lapply(data_lists, function (x) x  %>% summarise(k = n(), species = n_distinct(species_phylo), study = n_distinct(study)))))
+    order <- c(1, 3, 4, 2)
+  size  <- data.frame(do.call("rbind", lapply(data_lists, function (x) x  %>% summarise(k = n(), species = n_distinct(species_phylo), study = n_distinct(study)))))  %>% slice(order)
   
   # Create table of I2 Total and I2 for each level
-  i2  <- data.frame(do.call("rbind", lapply(MLMA_list, function (x) orchaRd::i2_ml(x))))
+  i2  <- lapply(MLMA_list[c(1,3,4)], function (x) orchaRd::i2_ml(x))
+  i2  <- data.frame(do.call("rbind", i2))
+  i2.2  <- lapply(MLMA_list[2], function (x) orchaRd::i2_ml(x))
+  i2.2 <- data.frame(do.call("rbind", i2.2))
+  i2[4,c(1,2,5,7)] <- i2.2
   i2  <- cbind(size, i2)
-i2$Stressor <- c("Corticosterone", "Social Deprevation", "Disturbance", "Nutrition")
+
+i2$Stressor <- c("Corticosterone",  "Disturbance", "Nutrition", "Social Deprevation")
 i2  <- i2  %>% select(Stressor, everything())
-i2[2,7:9] <- NA # Social deprivation does not have phylogeny or species phylo2 random effects
+
 eq  <- c(
   "Stressor",
   "n_{effects}",
@@ -171,12 +181,13 @@ eq  <- c(
   "I^2_{study} (\\%)",
   "I^2_{phylogeny} (\\%)",
   "I^2_{species} (\\%)",
+  "I^2_{shared animal} (\\%)",
   "I^2_{tissue} (\\%)",
   "I^2_{obs} (\\%)"
 )
 
 flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq))) %>% 
-  width(j = c(1:10), width = c(1.5, rep(0.65, 9)))  %>%  compose(j = 7:9, i = 2, value = as_paragraph("–"))
+  width(j = c(1:10), width = c(1.5, rep(0.65, 9)))  %>%  compose(j = c(7,8,10), i = 4, value = as_paragraph("–"))
 ```
 
 ```{r, fig-phylo}
@@ -231,6 +242,7 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
       if(i == 2){
           MLMR_list_Measure[[i]] <- rma.mv(SMDH ~ measurement_category, V = v_SMDH, 
                             random = list(~1| study, 
+                                          ~1| depend,
                                           ~1| obs),
                           test = "t",  
                           data = data_lists[[i]])
@@ -239,6 +251,7 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
                             random = list(~1| study, 
                                           ~1| species_phylo,
                                           ~1| species_phylo2,
+                                          ~1| depend,
                                           ~1| tissue_sum,
                                           ~1| obs),
                             R = list(species_phylo = phylo_cor),
