@@ -503,75 +503,6 @@ ann2 <- function() {list(add_phylopic(img = mammal, x = 4.2, y = -8, height = 0.
 ```
 
 
-# References
-
-<br>
-
-::: {#refs}
-:::
-
-<br>
-
-
-# Supplementary Materials
-
-```{r, prep_postnatal}
-#| label: prep_postnatal
-#| echo: false
-#| warning: false
-#| error: false 
-
-#### -------------------------------------------------- ####
-# 1.4   Pre vs Postnatal Stressor Comparison
-#### -------------------------------------------------- ####
-
-rerun = FALSE
-  if(rerun){
-    
-    # Create list to store models
-    MLMR_list_PrePost <- list()
-    
-    for(i in 1:length(data_lists)){
-      # Add observation level random effect
-        data_lists[[i]]$obs <- 1:nrow(data_lists[[i]])
-
-      # Prune the tree to relevant taxa contained within this dataset.
-        tree_prune <- tree_checks(tree = phylo, dataCol = "species_phylo", data = data_lists[[i]], type ="prune")
-
-      # Calculate the phylogenetic correlation matrix
-        phylo_cor <- vcv(tree_prune, cor = TRUE)
-
-      # # Fit the MLMR model for each dataset comparing pre vs postnatal. Note that ONLY one level for stage in the social deprivation dataset so cannot fit this model
-     
-      if(i %in% c(1, 3,4)){
-
-          MLMR_list_PrePost[[i]] <- rma.mv(SMDH ~ stage, V = v_SMDH, 
-                            random = list(~1| study, 
-                                          ~1| species_phylo,
-                                          ~1| species_phylo2,
-                                          ~1| tissue_sum,
-                                          ~1| obs),
-                            R = list(species_phylo = phylo_cor),
-                          test = "t", 
-                          data = data_lists[[i]])
-        # Add names to make sure we keep track of which dataset is which model                      
-        names(MLMR_list_PrePost)[i] <- names(data_lists)[i]
-      }
-      
-    }
-      
-    # Save the model
-        saveRDS(MLMR_list_PrePost, file = here("output", "models", "MLMR_list_PrePost.rds"))
-
-  } else {
-        MLMR_list_PrePost <- readRDS(here("output", "models", "MLMR_list_PrePost.rds"))
-  }
-
-# RVE to check robustness of results
-  robust_Prepost <- lapply(MLMR_list_PrePost[c(1,3,4)], function(x) robust(x, cluster = x$data[,"study"]))
-```
-
-
 ```{r, fig-orchard_prepost}
 #| label: fig-orchard_prepost
 #| echo: false
@@ -579,7 +510,7 @@ rerun = FALSE
 #| error: false
 #| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category for pre-natal versus postnatal manipulations."
   
-    plots  <- lapply(MLMR_list_PrePost[c(1,3,4)], function(x) orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
+    plots  <- lapply(MLMR_list_RelDur_preprost[c(1,3,4)], function(x) orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24))) 
                                                                         #+ #scale_color_manual(values = "black") + #scale_fill_manual(values = "gray"))
@@ -592,6 +523,18 @@ rerun = FALSE
     p_prepost
 ```
 
+
+# References
+
+<br>
+
+::: {#refs}
+:::
+
+<br>
+
+
+# Supplementary Materials
 
 ```{r, breakdowns}
 #| label: breakdowns
