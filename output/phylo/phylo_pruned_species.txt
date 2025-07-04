@@ -1,6 +1,5 @@
 Mus musculus
 Rattus norvegicus
-Tamiasciurus hudsonicus
 Oryctolagus cuniculus
 Capra hircus
 Ovis aries
@@ -23,7 +22,6 @@ Triturus ivanbureschi
 Tor putitora
 Danio rerio
 Piaractus mesopotamicus
-Brachymystax lenok
 Oncorhynchus nerka
 Oncorhynchus gorbuscha
 Oncorhynchus mykiss
