@@ -10,7 +10,7 @@
 		pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, here, ggrepel, patchwork, rotl, ape, phytools, kutils, ggtree, janitor)
 
 	# Load the data
-		data <- read_excel(here("data", "mito_meta_data_merged_02072025.xlsx"))
+		data <- read_excel(here("data", "mito_meta_data_merged_03072025.xlsx"))
 
 	# Check the data
 		str(data)
@@ -53,7 +53,7 @@
 				tissue_sum = ifelse(tissue_sum == "serum", "plasma/serum", tissue_sum),
 				tissue_sum = ifelse(tissue_sum == "erthrocyte", "erythrocyte", tissue_sum),
 				     stage = ifelse(stage == "prenatal/postnatal", "both", stage))  %>% 
-		filter(!measurement_category == "non-mitochondrial metabolic pathways")  %>% data.frame() # Drop non-metabolic pathways
+		filter(!measurement_category %in% c("non-mitochondrial metabolic pathways", "glucocorticoids"))  %>% filter(!exclude_missing_info == 0) %>% data.frame() # # Drop non-metabolic pathways and cort and Drop studies and or rows within studies that have missing (missing error, N) and/or ambiguous (uncertain errors) information
 
 #### --------------------------------------------------  ####
 # 2. Phylogeny
