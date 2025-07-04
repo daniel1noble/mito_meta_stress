@@ -174,3 +174,5 @@
 	write.csv(summary_table, here("output", "tables", "data_sum_table.csv"), row.names = FALSE)
 
 
+any(data$study == "s73") # Check if this study is in the data. It is not, so we can remove it from the list of studies to check
+
