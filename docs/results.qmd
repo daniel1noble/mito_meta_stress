@@ -38,7 +38,7 @@ editor:
 ## Loading some important packages. For first time use, unannotated and install the two packages first
 	source(here::here("R", "func.R"))
   check_and_install(c("pacman"))
-	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, equatags, rotl, rphylopic, ggimage, rmarkdown, knitr, kableExtra, janitor)
+	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, equatags, rotl, rphylopic, ggimage, rmarkdown, knitr, kableExtra, janitor, minqa)
 
 # Load the processed data. Keep object as list to hopefully make code more readable. 
          path <- here("output", "data")
@@ -250,7 +250,6 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
           MLMR_list_Measure[[i]] <- rma.mv(SMDH ~ measurement_category, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
-                                          ~1| species_phylo2,
                                           ~1| depend,
                                           ~1| tissue_sum,
                                           ~1| obs),
@@ -313,7 +312,6 @@ rerun = FALSE
           MLMR_list_RelDur_preprost[[i]] <- rma.mv(SMDH ~ scale(relative_total_duration, scale = FALSE) + stage, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
-                                          ~1| species_phylo2,
                                           ~1| depend,
                                           ~1| tissue_sum,
                                           ~1| obs),
@@ -372,13 +370,13 @@ rerun = FALSE
           MLMR_list_taxa[[i]] <- rma.mv(SMDH ~ class, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
-                                          ~1| species_phylo2,
                                           ~1| depend,
                                           ~1| tissue_sum,
                                           ~1| obs),
                             R = list(species_phylo = phylo_cor),
                           test = "t", 
-                          data = data_lists[[i]])
+                          data = data_lists[[i]], control = list(maxiter = 1000, 
+                                                                  tol = 1e-6))
         # Add names to make sure we keep track of which dataset is which model                      
         names(MLMR_list_taxa)[i] <- names(data_lists)[i]
       }
