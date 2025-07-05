@@ -237,7 +237,6 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
       if(i == 2){
           MLMR_list_Measure[[i]] <- rma.mv(SMDH ~ measurement_category, V = v_SMDH, 
                             random = list(~1| study, 
-                                          ~1| depend,
                                           ~1| obs),
                           test = "t",  
                           data = data_lists[[i]])
@@ -245,7 +244,6 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
           MLMR_list_Measure[[i]] <- rma.mv(SMDH ~ measurement_category, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
-                                          ~1| depend,
                                           ~1| tissue_sum,
                                           ~1| obs),
                             R = list(species_phylo = phylo_cor),
@@ -299,7 +297,6 @@ rerun = FALSE
       if(i == 2){
           MLMR_list_RelDur_preprost[[i]] <- rma.mv(SMDH ~ scale(relative_total_duration, scale = FALSE), V = v_SMDH, 
                             random = list(~1| study, 
-                                          ~1| depend,
                                           ~1| obs),
                           test = "t",  
                           data = data_lists[[i]])
@@ -307,7 +304,6 @@ rerun = FALSE
           MLMR_list_RelDur_preprost[[i]] <- rma.mv(SMDH ~ scale(relative_total_duration, scale = FALSE) + stage, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
-                                          ~1| depend,
                                           ~1| tissue_sum,
                                           ~1| obs),
                             R = list(species_phylo = phylo_cor),
@@ -365,7 +361,6 @@ rerun = FALSE
           MLMR_list_taxa[[i]] <- rma.mv(SMDH ~ class, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
-                                          ~1| depend,
                                           ~1| tissue_sum,
                                           ~1| obs),
                             R = list(species_phylo = phylo_cor),
@@ -451,8 +446,6 @@ rerun = FALSE
           nutri_up_down <- rma.mv(SMDH ~ nutrition_sum + nutrition_type, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
-                                          ~1| species_phylo2,
-                                          ~1| depend,
                                           ~1| tissue_sum,
                                           ~1| obs),
                             R = list(species_phylo = phylo_cor),
