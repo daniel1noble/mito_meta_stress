@@ -220,6 +220,7 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
     
     # Create list to store models
     MLMR_list_Measure <- list()
+    MLMR_list_Measure_noint <- list()
     
     for(i in 1:length(data_lists)){
       # Add observation level random effect
@@ -251,15 +252,37 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
                           data = data_lists[[i]])
       }
       
+      if(i == 2){
+          MLMR_list_Measure_noint[[i]] <- rma.mv(SMDH ~ measurement_category-1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1 + measurement_category| obs),
+                          test = "t",  rho = 0, struc = "HCS", 
+                          data = data_lists[[i]])
+      } else {
+          MLMR_list_Measure_noint[[i]] <- rma.mv(SMDH ~ measurement_category-1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1 + measurement_category| obs),
+                                          rho = 0, struc = "HCS", 
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = data_lists[[i]])
+      }
+      
+
       # Add names to make sure we keep track of which dataset is which model                      
         names(MLMR_list_Measure)[i] <- names(data_lists)[i]
+        names(MLMR_list_Measure_noint)[i] <- names(data_lists)[i]
     }
       
     # Save the model
         saveRDS(MLMR_list_Measure, file = here("output", "models", "MLMR_list_Measure.rds"))
+        saveRDS(MLMR_list_Measure_noint, file = here("output", "models", "MLMR_list_Measure_noint.rds"))
 
   } else {
         MLMR_list_Measure <- readRDS(here("output", "models", "MLMR_list_Measure.rds"))
+        MLMR_list_Measure_noint <- readRDS(here("output", "models", "MLMR_list_Measure_noint.rds"))
   }
 
 ```
@@ -290,6 +313,7 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
     
     # Create list to store models
     MLMR_list_preprost <- list()
+    MLMR_list_preprost_noint <- list()
     
     for(i in 1:length(data_lists)){
       # Add observation level random effect
@@ -321,15 +345,40 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
                           data = data_lists[[i]])
       }
 
+
+      if(i == 2){
+          MLMR_list_preprost_noint[[i]] <- rma.mv(SMDH ~ 1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| obs),
+                          test = "t",  
+                          data = data_lists[[i]])
+      } else {
+          MLMR_list_preprost_noint[[i]] <- rma.mv(SMDH ~ stage-1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1 + stage | obs),
+                                          rho = 0, struc = "HCS", 
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = data_lists[[i]])
+      }
+
+
       # Add names to make sure we keep track of which dataset is which model                      
         names(MLMR_list_preprost)[i] <- names(data_lists)[i]
+        names(MLMR_list_preprost_noint)[i] <- names(data_lists)[i]
+
     }
       
     # Save the model
         saveRDS(MLMR_list_preprost, file = here("output", "models", "MLMR_list_preprost.rds"))
+        saveRDS(MLMR_list_preprost_noint, file = here("output", "models", "MLMR_list_preprost_noint.rds"))
+
 
   } else {
         MLMR_list_preprost <- readRDS(here("output", "models", "MLMR_list_preprost.rds"))
+        MLMR_list_preprost_noint <- readRDS(here("output", "models", "MLMR_list_preprost_noint.rds"))
   }
 
  
@@ -350,6 +399,7 @@ rerun = FALSE
     
     # Create list to store models
     MLMR_list_taxa <- list()
+    MLMR_list_taxa_noint <- list()
     
     for(i in 1:length(data_lists)){
       # Add observation level random effect
@@ -363,7 +413,7 @@ rerun = FALSE
 
       # # Fit the MLMR model for each dataset but note that social deprivation only has one level for class so cannot fit this model
      
-      if(i %in% c(1, 3,4)){
+      if(i %in% c(1,3,4)){
           MLMR_list_taxa[[i]] <- rma.mv(SMDH ~ class, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
@@ -376,14 +426,30 @@ rerun = FALSE
         # Add names to make sure we keep track of which dataset is which model                      
         names(MLMR_list_taxa)[i] <- names(data_lists)[i]
       }
+
+      if(i %in% c(1,3,4)){
+          MLMR_list_taxa_noint[[i]] <- rma.mv(SMDH ~ class-1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1 + class| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", rho = 0, struc = "HCS", 
+                          data = data_lists[[i]], control = list(maxiter = 1000, 
+                                                                  tol = 1e-6))
+        # Add names to make sure we keep track of which dataset is which model                      
+        names(MLMR_list_taxa_noint)[i] <- names(data_lists)[i]
+      }
   
     }
       
     # Save the model
         saveRDS(MLMR_list_taxa, file = here("output", "models", "MLMR_list_taxa.rds"))
+        saveRDS(MLMR_list_taxa_noint, file = here("output", "models", "MLMR_list_taxa_noint.rds"))
 
   } else {
         MLMR_list_taxa <- readRDS(here("output", "models", "MLMR_list_taxa.rds"))
+        MLMR_list_taxa_noint <- readRDS(here("output", "models", "MLMR_list_taxa_noint.rds"))
   }
 
  # Summary of taxa 
@@ -392,20 +458,23 @@ rerun = FALSE
               n_species = n_distinct(species_phylo), 
               n_study = n_distinct(study))  %>% 
     arrange(desc(k))
+
+  # Species of mammals
+  mammals_sp <- data %>% filter(class == "Mammalia") %>% reframe(sp = unique(species_phylo2))
 ```
 
 
-In total, we collected  `r sum(i2$k)` effect sizes from `r length(unique(data$species_phylo))` species (@fig-phylo) and `r length(unique(data$study))` studies across the different stressors (Table @tbl-heterogeneity). There were clear taxonomic biases. The majority of effects came from studies on mammals (effects = `r taxa_table[1,2]`, studies = `r taxa_table[1,4]`), and these were only from `r taxa_table[1,3]` species. Fish had the second most effects (`r taxa_table[2,2]`, species = `r taxa_table[2,3]` and studies = `r taxa_table[2,4]`) followed by birds (`r taxa_table[3,2]`, species = `r taxa_table[3,3]` and studies = `r taxa_table[3,4]`) and amphibians (`r taxa_table[4,2]`, species = `r taxa_table[4,3]` from only `r taxa_table[4,4]` study). 
+In total, we collected  `r sum(i2$k)` effect sizes from `r length(unique(data$species_phylo))` species (@fig-phylo) and `r length(unique(data$study))` studies across the different stressors (Table @tbl-heterogeneity). There were clear taxonomic biases. The majority of effects came from studies on mammals (effects = `r taxa_table[1,2]`, studies = `r taxa_table[1,4]`), and these were only from `r taxa_table[1,3]` species (*Mus musculus*, *Rattus norvegicus*, *Ovis aries* and *Capra hircus*). Fish had the second most effects (`r taxa_table[2,2]`, species = `r taxa_table[2,3]` and studies = `r taxa_table[2,4]`) followed by birds (`r taxa_table[3,2]`, species = `r taxa_table[3,3]` and studies = `r taxa_table[3,4]`) and amphibians (`r taxa_table[4,2]`, species = `r taxa_table[4,3]` from only `r taxa_table[4,4]` study). 
 
 ## Corticosterone developmental impacts on mitochondrial function
 
-Overall, exposure to corticosterone during development negatively impacted mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a). However, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; Table @tbl-heterogeneity and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[1,"I2_study"]`% of variation being driven by differences among studies ($I^2_{study}$; Table @tbl-heterogeneity) and `r i2[1,"I2_tissue_sum"]`% of variation being driven by differences among tissues ($I^2_{tissue}$; Table @tbl-heterogeneity) with little to no variation explained by phylogeny (Table @tbl-heterogeneity). 
+Overall, exposure to corticosterone during development negatively impacted mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; Table @tbl-heterogeneity and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[1,"I2_study"]`% of variation being driven by differences among studies ($I^2_{study}$; Table @tbl-heterogeneity) and `r i2[1,"I2_tissue_sum"]`% of variation being driven by differences among tissues ($I^2_{tissue}$; Table @tbl-heterogeneity) with little to no variation explained by phylogeny (Table @tbl-heterogeneity). 
 
 Prenatal exposure to corticosterone had a larger negative impact on mitochondrial function than postnatal exposure ($SMD_{H}$ = `r MLMR_list_preprost[[1]]$b[2]`, 95% CI = `r MLMR_list_preprost[[1]]$ci.lb[2]` to `r MLMR_list_preprost[[1]]$ci.ub[2]`), however, this effect was not significant ($p$ = `r MLMR_list_preprost[[1]]$pval[2]`; [@fig-orchard_prepost]a).
 
-Mitochondrial function was supressed across all major functional categories in a similar fashion with no significant differences among functional categories ($Q_{M}$ = `r MLMR_list_Measure[[1]]$QM`, $df$ = `r MLMR_list_Measure[[1]]$QMdf[1]` and `r MLMR_list_Measure[[1]]$QMdf[2]`, $p$ = `r MLMR_list_Measure[[1]]$QMp` [@fig-orchard_measure]a), with treatment with high levels of corticostrone supressing respiration and metabolic capacity and increasing oxidative damage. 
+Mitochondrial function was supressed across all major functional categories in a similar fashion with no significant differences among functional categories ($Q_{M}$ = `r MLMR_list_Measure[[1]]$QM`, $df$ = `r MLMR_list_Measure[[1]]$QMdf[1]` and `r MLMR_list_Measure[[1]]$QMdf[2]`, $p$ = `r MLMR_list_Measure[[1]]$QMp` [@fig-orchard_measure]a). Treatment with corticostrone supressed respiration and metabolic capacity the greatest (respiraton: $\mu$ = `r MLMR_list_Measure_noint[[1]]$b[4]`, 95% CI: `r MLMR_list_Measure_noint[[1]]$ci.lb[4]` to `r MLMR_list_Measure_noint[[1]]$ci.ub[4]`, $p$ = `r MLMR_list_Measure_noint[[1]]$pval[4]`; metabolic capacity: $\mu$ = `r MLMR_list_Measure_noint[[1]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[1]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[1]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[1]]$pval[2]`) and increasing oxidative damage ($\mu$ = `r MLMR_list_Measure_noint[[1]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[1]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[1]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[1]]$pval[3]`). 
 
-While effects appeared to be stronger in mammals, compared with birds and fish, there were no significant differences among classes ($Q_{T}$ = `r MLMR_list_taxa[[1]]$QM`, $df$ = `r MLMR_list_taxa[[1]]$QMdf[1]` and `r MLMR_list_taxa[[1]]$QMdf[2]`, $p$ = `r MLMR_list_taxa[[1]]$QMp`; [@fig-orchard_taxa]a). 
+While effects appeared to be stronger in mammals, there were no significant differences among classes ($Q_{T}$ = `r MLMR_list_taxa[[1]]$QM`, $df$ = `r MLMR_list_taxa[[1]]$QMdf[1]` and `r MLMR_list_taxa[[1]]$QMdf[2]`, $p$ = `r MLMR_list_taxa[[1]]$QMp`; [@fig-orchard_taxa]a). Overall, mitochondrial function was significantly supressed in mammals ($\mu$ = `r MLMR_list_taxa_noint[[1]]$b[3]`, 95% CI: `r MLMR_list_taxa_noint[[1]]$ci.lb[3]` to `r MLMR_list_taxa_noint[[1]]$ci.ub[3]`, $p$ = `r MLMR_list_taxa_noint[[1]]$pval[3]`) and fish ($\mu$ = `r MLMR_list_taxa_noint[[1]]$b[1]`, 95% CI: `r MLMR_list_taxa_noint[[1]]$ci.lb[1]` to `r MLMR_list_taxa_noint[[1]]$ci.ub[1]`, $p$ = `r MLMR_list_taxa_noint[[1]]$pval[1]`), but effects were weaker in birds ($\mu$ = `r MLMR_list_taxa_noint[[1]]$b[2]`, 95% CI: `r MLMR_list_taxa_noint[[1]]$ci.lb[2]` to `r MLMR_list_taxa_noint[[1]]$ci.ub[2]`, $p$ = `r MLMR_list_taxa_noint[[1]]$pval[2]`).
 
 ## Social deprivation developmental impacts on mitochondrial function
 Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (Table @tbl-heterogeneity). 
