@@ -38,7 +38,7 @@ editor:
 ## Loading some important packages. For first time use, unannotated and install the two packages first
 	source(here::here("R", "func.R"))
   check_and_install(c("pacman"))
-	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, equatags, rotl, rphylopic, ggimage, rmarkdown, knitr, kableExtra, janitor, minqa)
+	pacman::p_load(tidyverse, flextable, latex2exp, metafor, orchaRd, readxl, ape, phytools,here, brms, ggrepel, patchwork, magick, ggtree, equatags, rotl, rphylopic, ggimage, rmarkdown, knitr, kableExtra, janitor, minqa, multcomp)
 
 # Load the processed data. Keep object as list to hopefully make code more readable. 
          path <- here("output", "data")
@@ -262,8 +262,6 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
         MLMR_list_Measure <- readRDS(here("output", "models", "MLMR_list_Measure.rds"))
   }
 
-# RVE to check robustness of results
-  robust_measure <- lapply(MLMR_list_Measure, function(x) robust(x, cluster = x$data[,"study"]))
 ```
 
 ```{r, preprost}
@@ -388,13 +386,16 @@ rerun = FALSE
         MLMR_list_taxa <- readRDS(here("output", "models", "MLMR_list_taxa.rds"))
   }
 
-
-  # RVE to check robustness of results
-  robust_taxa <- lapply(MLMR_list_taxa[c(1,3,4)], function(x) robust(x, cluster = x$data[,"study"]))
+ # Summary of taxa 
+  taxa_table <- data  %>% group_by(class) %>% 
+    summarise(k = n(), 
+              n_species = n_distinct(species_phylo), 
+              n_study = n_distinct(study))  %>% 
+    arrange(desc(k))
 ```
 
 
-In total, we collected  `r sum(i2$k)` effect sizes from `r length(unique(data$species_phylo))` species (@fig-phylo) and `r length(unique(data$study))` studies across the different stressors (Table @tbl-heterogeneity). 
+In total, we collected  `r sum(i2$k)` effect sizes from `r length(unique(data$species_phylo))` species (@fig-phylo) and `r length(unique(data$study))` studies across the different stressors (Table @tbl-heterogeneity). There were clear taxonomic biases. The majority of effects came from studies on mammals (effects = `r taxa_table[1,2]`, studies = `r taxa_table[1,4]`), and these were only from `r taxa_table[1,3]` species. Fish had the second most effects (`r taxa_table[2,2]`, species = `r taxa_table[2,3]` and studies = `r taxa_table[2,4]`) followed by birds (`r taxa_table[3,2]`, species = `r taxa_table[3,3]` and studies = `r taxa_table[3,4]`) and amphibians (`r taxa_table[4,2]`, species = `r taxa_table[4,3]` from only `r taxa_table[4,4]` study). 
 
 ## Corticosterone developmental impacts on mitochondrial function
 
@@ -409,7 +410,7 @@ While effects appeared to be stronger in mammals, compared with birds and fish, 
 ## Social deprivation developmental impacts on mitochondrial function
 Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (Table @tbl-heterogeneity). 
 
-Social deprevation studies were only ever done with mammals and all studies manipulated environments postnatally. 
+Social deprevation studies were only ever done with mammals, and all studies manipulated environments postnatally. Mitochondrial function was supressed across all major functional categories with no significant differences among functional categories ($Q_{M}$ = `r MLMR_list_Measure[[2]]$QM`, $df$ = `r MLMR_list_Measure[[2]]$QMdf[1]` and `r MLMR_list_Measure[[2]]$QMdf[2]`, $p$ = `r MLMR_list_Measure[[2]]$QMp`). Nonetheless, effects were more negative for antioxidant capacity () and oxidative damage () compared to metabolic capacity ([@fig-orchard_measure]b).
 
 ## Disturbance developmental impacts on mitochondrial function
 
