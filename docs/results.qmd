@@ -15,7 +15,7 @@ execute:
   error: false
   include: true
 crossref:
-  fig-title: 'Figure'
+  fig-title: '**Figure**'
   fig-labels: arabic
   title-delim: "-"
   fig-prefix: "Figure"
@@ -52,6 +52,9 @@ editor:
 
 # Bring in the phylogeny 
   phylo <- read.tree(here("output", "phylo", "phylo_pruned_species.nwk"))
+
+# Tree also contains species that are in temperature dataset so these need to be pruned
+  phylo <- tree_checks(tree = phylo, dataCol = "species_phylo", data = data, type = "prune")
 
 # Set digits
   options(digits = 2)
@@ -149,7 +152,7 @@ We had a substantially larger dataset of studies measuring nutritional stress. T
 
 ```{r, tbl-heterogeneity}
 #| label: tbl-heterogeneity
-#| tbl-cap: "Heterogeneity estimates for developmental stressor datasets"
+#| tbl-cap: "Relative heterogeneity estimates ($I^2$), sample sizes ($n_{effects}$), number of studies ($n_{study}$) and number of species ($n_{species}$) for each of the developmental stressor categories. Relative heterogeneity is reported as $I^2$ (in percent) based on the intercept-only multi-level meta-analytic model. Total heterogeneity, along with stratified version of $I^2$ (study, phylogeny, tissue type and observation) are also provided. Note we also present other heterogeneity measures in the supplementary material."
 #| echo: false
 #| warning: false
 #| error: false
@@ -189,7 +192,7 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
 #| echo: false
 #| warning: false
 #| error: false
-#| fig-cap: "Phylogeny of species included in the meta-analysis."
+#| fig-cap: "**Phylogeny of species included in the meta-analysis**. Phylogenetic relationships and divergence times are based on TimeTree [timetree.org; @kumar2022timetree]. The phylogeny was pruned to only include species in the dataset."
   
   phylo$tip.label <- gsub("_", " ", phylo$tip.label)
 
@@ -198,7 +201,7 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
     theme_tree2() + labs(x = "Millions of Years (MY)") +
     theme(legend.position = "none") 
 
-    ggsave(filename = here("output", "figures", "phylo.png"), fig_phylo, width = 6, height = 9)
+    ggsave(filename = here("output", "figures", "phylo.png"), fig_phylo, width = 4.298039, height = 5.992157)
 
   p_phylo_img <- image_read(here("output", "figures", "phylo.png"))
   p_phylo_img
@@ -455,7 +458,7 @@ rerun = FALSE
  # Summary of taxa 
   taxa_table <- data  %>% group_by(class) %>% 
     summarise(k = n(), 
-              n_species = n_distinct(species_phylo), 
+              n_species = n_distinct(species_phylo2), 
               n_study = n_distinct(study))  %>% 
     arrange(desc(k))
 
@@ -464,6 +467,38 @@ rerun = FALSE
 ```
 
 In total, we collected  `r sum(i2$k)` effect sizes from `r length(unique(data$species_phylo))` species (@fig-phylo) and `r length(unique(data$study))` studies across the different stressors (Table @tbl-heterogeneity). There were clear taxonomic biases. The majority of effects came from studies on mammals (effects = `r taxa_table[1,2]`, studies = `r taxa_table[1,4]`), and these were only from `r taxa_table[1,3]` species (*Mus musculus*, *Rattus norvegicus*, *Ovis aries* and *Capra hircus*). Fish had the second most effects (`r taxa_table[2,2]`, species = `r taxa_table[2,3]` and studies = `r taxa_table[2,4]`) followed by birds (`r taxa_table[3,2]`, species = `r taxa_table[3,3]` and studies = `r taxa_table[3,4]`) and amphibians (`r taxa_table[4,2]`, species = `r taxa_table[4,3]` from only `r taxa_table[4,4]` study). 
+
+```{r, fig-orchard_int}
+#| label: fig-orchard_int
+#| echo: false
+#| warning: false
+#| error: false
+#| fig-cap: "**Overall meta-analytic mean estimates for each developmental stressor category (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are provided for each stressor category. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision)."
+  
+  table <- lapply(data_lists, function(x) x  %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
+
+# Create coordinate system that is unique for each plot
+z = list(data.frame(x = 1.2, y = 5),
+         data.frame(x = 1.2, y = 5),
+         data.frame(x = 1.2, y = 5),
+         data.frame(x = 1.2, y = 5))
+
+    plots  <- mapply(function(x, y, z) orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  
+                                                ylim(-10,10) + scale_x_discrete(labels = "Overall") +
+                                                theme_classic() + theme(legend.position = "top",
+                                                                        axis.title = element_text(size = 18),
+                                                                        plot.title = element_text(face = "bold", size = 16),
+                                                                        axis.text = element_text(size = 12),
+                                                                        plot.tag = element_text(size = 24)) + scale_color_manual(values = "black") + scale_fill_manual(values = "gray") +
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMA_list, y = table, z = z, SIMPLIFY = FALSE)
+
+
+    p_overall <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig1.png"), p_overall, width = 10.2, height = 7)
+
+    p_overall <- image_read(here("output", "figures", "fig1.png"))
+    p_overall
+```
 
 ## Corticosterone developmental impacts on mitochondrial function
 
@@ -475,10 +510,98 @@ Mitochondrial function was supressed across all major functional categories in a
 
 While effects appeared to be stronger in mammals, there were no significant differences among classes ($Q_{M}_{`r MLMR_list_taxa[[1]]$QMdf[1]`,`r MLMR_list_taxa[[1]]$QMdf[2]`}$ = `r MLMR_list_taxa[[1]]$QM`, $p$ = `r MLMR_list_taxa[[1]]$QMp`; [@fig-orchard_taxa]a). Overall, mitochondrial function was supressed in mammals ($SMD_{H}$ = `r MLMR_list_taxa_noint[[1]]$b[3]`, 95% CI: `r MLMR_list_taxa_noint[[1]]$ci.lb[3]` to `r MLMR_list_taxa_noint[[1]]$ci.ub[3]`, $p$ = `r MLMR_list_taxa_noint[[1]]$pval[3]`) and fish ($SMD_{H}$ = `r MLMR_list_taxa_noint[[1]]$b[1]`, 95% CI: `r MLMR_list_taxa_noint[[1]]$ci.lb[1]` to `r MLMR_list_taxa_noint[[1]]$ci.ub[1]`, $p$ = `r MLMR_list_taxa_noint[[1]]$pval[1]`), with effects being weaker (albeit still negative) in birds ($SMD_{H}$ = `r MLMR_list_taxa_noint[[1]]$b[2]`, 95% CI: `r MLMR_list_taxa_noint[[1]]$ci.lb[2]` to `r MLMR_list_taxa_noint[[1]]$ci.ub[2]`, $p$ = `r MLMR_list_taxa_noint[[1]]$pval[2]`).
 
+
+```{r, fig-orchard_measure}
+#| label: fig-orchard_measure
+#| echo: false
+#| warning: false
+#| error: false
+#| fig-cap: "**Overall meta-analytic mean estimates across each functional trait category for each developmental stressor type (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each trait category. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision)."
+
+# Get summary data for levels
+measure_table <- lapply(data_lists, function(x) x  %>% group_by(measurement_category) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
+
+# Create coordinate system that is unique for each plot
+z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(6,4)))
+  
+# Apply orchard to each model and add the k and spp information to the plot
+  plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+                                                      axis.text = element_text(size = 12),
+                                                       plot.tag = element_text(size = 24)) +
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, SIMPLIFY = FALSE)                                                 
+
+
+# Create a layout for the plots
+    p_measure <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig2.png"), p_measure, width = 15.5, height = 15.5)
+
+    p_measure <- image_read(here("output", "figures", "fig2.png"))
+    p_measure
+```
+
 ## Social deprivation developmental impacts on mitochondrial function
 Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (Table @tbl-heterogeneity). 
 
 Social deprevation studies were only ever done with mammals, and all studies manipulated environments postnatally. Mitochondrial function was supressed across all major functional categories but they did not differ significantly from each other ($Q_{M}_{`r MLMR_list_Measure[[2]]$QMdf[1]`, `r MLMR_list_Measure[[2]]$QMdf[2]`}$ = `r MLMR_list_Measure[[2]]$QM`, $p$ = `r MLMR_list_Measure[[2]]$QMp`; [@fig-orchard_measure]b). Effects were more negative for antioxidant capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[1]`) and oxidative damage ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[3]`). While metabolic capacity was also supressed overall, it was not significantly different from zero ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[2]`; [@fig-orchard_measure]b).
+
+
+```{r, fig-orchard_taxa}
+#| label: fig-orchard_taxa
+#| echo: false
+#| warning: false
+#| error: false
+#| fig-cap: "**Overall meta-analytic mean estimates for each taxonomic group (class) across developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each class. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision)"
+  
+    # get silouettes for taxa
+     
+        # Get a single image UUID for a species
+        uuid_mammal <- get_uuid(name = "Mus_musculus")
+        # Get the image for that UUID
+        mammal <- get_phylopic(uuid = uuid_mammal)
+        
+        # Get a single image UUID for a species
+        uuid_bird<- get_uuid(name = "Taeniopygia_guttata")
+        # Get the image for that UUID
+        bird <- get_phylopic(uuid = uuid_bird)
+        #bird <- rotate_phylopic(img = bird, angle = 45)
+
+         #Get a single image UUID for a species
+        uuid_amphib <- get_uuid(name = "Triturus")
+        # Get the image for that UUID
+        amphib <- get_phylopic(uuid = uuid_amphib)
+
+          #Get a single image UUID for a species
+        uuid_fish <- get_uuid(name = "Dicentrarchus_labrax")
+        # Get the image for that UUID
+        fish <- get_phylopic(uuid = uuid_fish)
+
+  # Get summary data for levels
+taxa_table <- lapply(data_lists, function(x) x  %>% group_by(class) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
+
+# Create coordinate system that is unique for each plot
+z = list(data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)))
+
+    plots  <- mapply(function(x, y, z)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+                                                      axis.text = element_text(size = 12),
+                                                       plot.tag = element_text(size = 24))+
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
+                                                       
+ann1 <- function() {list(add_phylopic(img = mammal, x = 3.2, y = -8, height = 0.45),
+                         add_phylopic(img = bird, x = 2.2, y = -8, height = 0.45), add_phylopic(img = fish, x = 1.2, y = -8, height = 0.35))}
+ann2 <- function() {list(add_phylopic(img = mammal, x = 4.2, y = -8, height = 0.45),
+                         add_phylopic(img = bird, x = 3.2, y = -8, height = 0.45),
+                         add_phylopic(img = amphib, x = 2.2, y = -8, height = 0.35), add_phylopic(img = fish, x = 1.2, y = -8, height = 0.35))}
+    p_taxa <- (plots[[1]] + ann1() + ggtitle("Corticosterone") + plots[[2]] + ann1() + ggtitle("Disturbance") + plots[[3]] + ann2() + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig3.png"), p_taxa, width = 15, height = 5)
+
+    p_taxa <- image_read(here("output", "figures", "fig3.png"))
+    p_taxa
+```
 
 ## Disturbance developmental impacts on mitochondrial function
 
@@ -487,6 +610,35 @@ Disturbance during development had a negative impact on mitochondrial function (
 Impacts of disturbance affected functional categories significantly differently ($Q_{M}_{`r MLMR_list_Measure[[3]]$QMdf[1]`, `r MLMR_list_Measure[[3]]$QMdf[2]`}$ = `r MLMR_list_Measure[[3]]$QM`, $p$ = `r MLMR_list_Measure[[3]]$QMp` [@fig-orchard_measure]c). Oxidative damage was most impacted by disturbance stress ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[3]`), and differed significantly from antioxidant ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[1]`) and metabolic capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[2]`) ([@fig-orchard_measure]c). 
 
 Disturbance stress occured only postnatally in fish and birds, whereas in mammals disturbance stressors were also applied prenatally. As such, there was some taxonomic bias. However, we did not find any significant differences among classes ($Q_{M}_{`r MLMR_list_taxa[[3]]$QMdf[1]`, `r MLMR_list_taxa[[3]]$QMdf[2]`}$ = `r MLMR_list_taxa[[3]]$QM`, $p$ = `r MLMR_list_taxa[[3]]$QMp`; [@fig-orchard_taxa]b). Despite this, we found evidence that prenatal and post-natal disturbance stressors had different impacts on mitochondrial function. Prenatal disturbance stressors had a larger negative (albeit non-significant) impact on mitochondrial function compared to postnatal disturbance (Contrast $SMD_{H}$ = `r MLMR_list_preprost[[3]]$b[2]`, 95% CI = `r MLMR_list_preprost[[3]]$ci.lb[2]` to `r MLMR_list_preprost[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_preprost[[3]]$pval[2]`; [@fig-orchard_prepost]b). Overall, prenatal disturbance stressors had a larger negative impact on mitochondrial function ($SMD_{H}$ = `r MLMR_list_preprost_noint[[3]]$b[2]`, 95% CI = `r MLMR_list_preprost_noint[[3]]$ci.lb[2]` to `r MLMR_list_preprost_noint[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_preprost_noint[[3]]$pval[2]`), whereas postnatal disturbance stressors had a smaller negative impact ($SMD_{H}$ = `r MLMR_list_preprost_noint[[3]]$b[1]`, 95% CI = `r MLMR_list_preprost_noint[[3]]$ci.lb[1]` to `r MLMR_list_preprost_noint[[3]]$ci.ub[1]`, $p$ = `r MLMR_list_preprost_noint[[3]]$pval[1]`) ([@fig-orchard_prepost]b).
+
+
+```{r, fig-orchard_prepost}
+#| label: fig-orchard_prepost
+#| echo: false
+#| warning: false
+#| error: false
+#| fig-cap: "**Overall meta-analytic mean estimates different stages of manipulation (pre-natal, post-natal or both) across different developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each stage. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision)"
+
+ # Get summary data for levels
+prepost_table <- lapply(data_lists, function(x) x  %>% group_by(stage) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
+
+# Create coordinate system that is unique for each plot
+z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
+         data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)))
+  
+    plots  <- mapply(function(x,y,z){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+                                                      axis.text = element_text(size = 12),
+                                                       plot.tag = element_text(size = 24)) +
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
+                                                                        
+    p_prepost <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig5.png"), p_prepost, width = 15, height = 8)
+
+    p_prepost <- image_read(here("output", "figures", "fig5.png"))
+    p_prepost
+```
+
 
 ## Nutrition developmental impacts on mitochondrial function
 Nutritional stress during development had limited impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%),  phylogeny ($I^2_{phylogeny}$ = `r i2[3,"I2_species_phylo"]`%) and tissue ($I^2_{tissue}$ = `r i2[3,"I2_tissue_sum"]`%) (Table @tbl-heterogeneity).
@@ -589,152 +741,6 @@ rerun = FALSE
   }
 
 ```
-
-```{r, fig-orchard_int}
-#| label: fig-orchard_int
-#| echo: false
-#| warning: false
-#| error: false
-#| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category."
-  
-  table <- lapply(data_lists, function(x) x  %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
-
-# Create coordinate system that is unique for each plot
-z = list(data.frame(x = 1.2, y = 5),
-         data.frame(x = 1.2, y = 5),
-         data.frame(x = 1.2, y = 5),
-         data.frame(x = 1.2, y = 5))
-
-    plots  <- mapply(function(x, y, z) orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  
-                                                ylim(-10,10) + scale_x_discrete(labels = "Overall") +
-                                                theme_classic() + theme(legend.position = "top",
-                                                                        axis.title = element_text(size = 18),
-                                                                        plot.title = element_text(face = "bold", size = 16),
-                                                                        axis.text = element_text(size = 12),
-                                                                        plot.tag = element_text(size = 24)) + scale_color_manual(values = "black") + scale_fill_manual(values = "gray") +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMA_list, y = table, z = z, SIMPLIFY = FALSE)
-
-
-    p_overall <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig1.png"), p_overall, width = 10.2, height = 7)
-
-    p_overall <- image_read(here("output", "figures", "fig1.png"))
-    p_overall
-```
-
-```{r, fig-orchard_measure}
-#| label: fig-orchard_measure
-#| echo: false
-#| warning: false
-#| error: false
-#| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category for the different measurement types."
-
-# Get summary data for levels
-measure_table <- lapply(data_lists, function(x) x  %>% group_by(measurement_category) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
-
-# Create coordinate system that is unique for each plot
-z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(6,4)))
-  
-# Apply orchard to each model and add the k and spp information to the plot
-  plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
-                                                      axis.text = element_text(size = 12),
-                                                       plot.tag = element_text(size = 24)) +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, SIMPLIFY = FALSE)                                                 
-
-
-# Create a layout for the plots
-    p_measure <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig2.png"), p_measure, width = 15.5, height = 15.5)
-
-    p_measure <- image_read(here("output", "figures", "fig2.png"))
-    p_measure
-```
-
-```{r, fig-orchard_taxa}
-#| label: fig-orchard_taxa
-#| echo: false
-#| warning: false
-#| error: false
-#| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category for the different measurement types."
-  
-    # get silouettes for taxa
-     
-        # Get a single image UUID for a species
-        uuid_mammal <- get_uuid(name = "Mus_musculus")
-        # Get the image for that UUID
-        mammal <- get_phylopic(uuid = uuid_mammal)
-        
-        # Get a single image UUID for a species
-        uuid_bird<- get_uuid(name = "Taeniopygia_guttata")
-        # Get the image for that UUID
-        bird <- get_phylopic(uuid = uuid_bird)
-        #bird <- rotate_phylopic(img = bird, angle = 45)
-
-         #Get a single image UUID for a species
-        uuid_amphib <- get_uuid(name = "Triturus")
-        # Get the image for that UUID
-        amphib <- get_phylopic(uuid = uuid_amphib)
-
-          #Get a single image UUID for a species
-        uuid_fish <- get_uuid(name = "Dicentrarchus_labrax")
-        # Get the image for that UUID
-        fish <- get_phylopic(uuid = uuid_fish)
-
-  # Get summary data for levels
-taxa_table <- lapply(data_lists, function(x) x  %>% group_by(class) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
-
-# Create coordinate system that is unique for each plot
-z = list(data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)))
-
-    plots  <- mapply(function(x, y, z)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
-                                                      axis.text = element_text(size = 12),
-                                                       plot.tag = element_text(size = 24))+
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
-                                                       
-ann1 <- function() {list(add_phylopic(img = mammal, x = 3.2, y = -8, height = 0.45),
-                         add_phylopic(img = bird, x = 2.2, y = -8, height = 0.45), add_phylopic(img = fish, x = 1.2, y = -8, height = 0.35))}
-ann2 <- function() {list(add_phylopic(img = mammal, x = 4.2, y = -8, height = 0.45),
-                         add_phylopic(img = bird, x = 3.2, y = -8, height = 0.45),
-                         add_phylopic(img = amphib, x = 2.2, y = -8, height = 0.35), add_phylopic(img = fish, x = 1.2, y = -8, height = 0.35))}
-    p_taxa <- (plots[[1]] + ann1() + ggtitle("Corticosterone") + plots[[2]] + ann1() + ggtitle("Disturbance") + plots[[3]] + ann2() + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig3.png"), p_taxa, width = 15, height = 5)
-
-    p_taxa <- image_read(here("output", "figures", "fig3.png"))
-    p_taxa
-```
-
-```{r, fig-orchard_prepost}
-#| label: fig-orchard_prepost
-#| echo: false
-#| warning: false
-#| error: false
-#| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category for pre-natal versus postnatal manipulations."
-
- # Get summary data for levels
-prepost_table <- lapply(data_lists, function(x) x  %>% group_by(stage) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
-
-# Create coordinate system that is unique for each plot
-z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
-         data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)))
-  
-    plots  <- mapply(function(x,y,z){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
-                                                      axis.text = element_text(size = 12),
-                                                       plot.tag = element_text(size = 24)) +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
-                                                                        
-    p_prepost <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig5.png"), p_prepost, width = 15, height = 8)
-
-    p_prepost <- image_read(here("output", "figures", "fig5.png"))
-    p_prepost
-```
-
 
 # References
 
