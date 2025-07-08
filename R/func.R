@@ -74,13 +74,13 @@ make_het_tables  <- function(mod_list, size, type = c("i2", "cv2", "m2")){
   type = match.arg(type)
 
   het  <- lapply(mod_list[c(1,3,4)], function (x) switch(type, "i2" = orchaRd::i2_ml(x),
-                                                              "cv2" = orchaRd::cv2_ml(x),
-                                                               "m2" = orchaRd::m2_ml(x)))
+                                                              "cv2" = orchaRd::cvh1_ml(x),
+                                                               "m2" = orchaRd::m1_ml(x)))
   het  <- data.frame(do.call("rbind", het))
   
   het.2 <- lapply(mod_list[2], function (x) switch(type, "i2" = orchaRd::i2_ml(x),
-                                                        "cv2" = orchaRd::cv2_ml(x),
-                                                         "m2" = orchaRd::m2_ml(x)))
+                                                        "cv2" = orchaRd::cvh1_ml(x),
+                                                         "m2" = orchaRd::m1_ml(x)))
   het.2 <- data.frame(do.call("rbind", het.2))
   
   het[4,c(1,2,5)] <- het.2
