@@ -19,7 +19,7 @@ crossref:
   fig-labels: arabic
   title-delim: "-"
   fig-prefix: "Figure"
-  tbl-prefix: "Table"
+  tbl-prefix: ""
 editor: 
   markdown: 
     wrap: 72
@@ -266,28 +266,37 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
   robust_measure <- lapply(MLMR_list_Measure, function(x) robust(x, cluster = x$data[,"study"]))
 ```
 
-```{r, RelDur_preprost}
-#| label: RelDur_preprost
+```{r, preprost}
+#| label: preprost
 #| echo: false
 #| warning: false
 #| error: false
 
+
+# Check relative duration differences across pre and postnatal for each dataset
+  rel_dur_table <- lapply(data_lists, function(x) x  %>% group_by(class) %>% 
+                          summarise(mean = mean(relative_total_duration, na.rm = TRUE), 
+                                      sd = sd(relative_total_duration, na.rm = TRUE), 
+                                       k = n(), 
+                                    stdy = n_distinct(study), 
+                                     spp = n_distinct(species_phylo)))
+
+# Releative total duration is at the level of species and there are too few species to fit this variable as a moderator so sticking with just pre/post.
+
 #### -------------------------------------------------- ####
-# 1.3   Relative total duration of development stressor and stage 
+# 1.3   Stage of stressor
 #### -------------------------------------------------- ####
 
-rerun = FALSE
+  rerun = FALSE
   if(rerun){
     
     # Create list to store models
-    MLMR_list_RelDur_preprost <- list()
+    MLMR_list_preprost <- list()
     
     for(i in 1:length(data_lists)){
       # Add observation level random effect
         data_lists[[i]]$obs <- 1:nrow(data_lists[[i]])
-      # Scale the relative total duration of stressor to development time  
-        data_lists[[i]]$sc_rel_total <- scale(data_lists[[i]]$relative_total_duration, scale = FALSE)
-
+      
       # Prune the tree to relevant taxa contained within this dataset.
         tree_prune <- tree_checks(tree = phylo, dataCol = "species_phylo", data = data_lists[[i]], type ="prune")
 
@@ -297,13 +306,13 @@ rerun = FALSE
       # # Fit the MLMR model for each dataset comparing pre vs postnatal and accounting for relative duration of stressor standardised to develeopment time. Note that social deprivation only has one level for stage so cannot fit this model
      
       if(i == 2){
-          MLMR_list_RelDur_preprost[[i]] <- rma.mv(SMDH ~ sc_rel_total, V = v_SMDH, 
+          MLMR_list_preprost[[i]] <- rma.mv(SMDH ~ 1, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| obs),
                           test = "t",  
                           data = data_lists[[i]])
       } else {
-          MLMR_list_RelDur_preprost[[i]] <- rma.mv(SMDH ~ sc_rel_total + stage, V = v_SMDH, 
+          MLMR_list_preprost[[i]] <- rma.mv(SMDH ~ stage, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
                                           ~1| tissue_sum,
@@ -313,23 +322,19 @@ rerun = FALSE
                           test = "t", 
                           data = data_lists[[i]])
       }
-      
+
       # Add names to make sure we keep track of which dataset is which model                      
-        names(MLMR_list_RelDur_preprost)[i] <- names(data_lists)[i]
+        names(MLMR_list_preprost)[i] <- names(data_lists)[i]
     }
       
     # Save the model
-        saveRDS(MLMR_list_RelDur_preprost, file = here("output", "models", "MLMR_list_RelDur_preprost.rds"))
+        saveRDS(MLMR_list_preprost, file = here("output", "models", "MLMR_list_preprost.rds"))
 
   } else {
-        MLMR_list_RelDur_preprost <- readRDS(here("output", "models", "MLMR_list_RelDur_preprost.rds"))
+        MLMR_list_preprost <- readRDS(here("output", "models", "MLMR_list_preprost.rds"))
   }
 
-
-  # RVE to check robustness of results
-  robust_RelDur <- lapply(MLMR_list_RelDur_preprost, function(x) robust(x, cluster = x$data[,"study"]))
-  #hist(residuals(robust_RelDur$cort_stress.csv))
-  #plot(data_lists[[1]]$SMDH, data_lists[[1]]$relative_total_duration) 
+ 
 ```
 
 ```{r, taxa}
@@ -389,24 +394,31 @@ rerun = FALSE
 ```
 
 
-
-In total, we collected data from `r sum(i2$k)` effect sizes across `r length(unique(data$species_phylo))` species (@fig-phylo) and `r length(unique(data$study))` studies across the different stressors (@tbl-heterogeneity). 
+In total, we collected  `r sum(i2$k)` effect sizes from `r length(unique(data$species_phylo))` species (@fig-phylo) and `r length(unique(data$study))` studies across the different stressors (Table @tbl-heterogeneity). 
 
 ## Corticosterone developmental impacts on mitochondrial function
 
-Overall, exposure to corticosterone during development negatively impacted mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a). However, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; @tbl-heterogeneity), with `r i2[1,"I2_study"]`% of variation being driven by differences among studies ($I^2_{study}$; @tbl-heterogeneity) and `r i2[1,"I2_tissue_sum"]`% of variation being driven by differences among tissues ($I^2_{tissue}$; @tbl-heterogeneity) with little to no variation explained by phylogeny (@tbl-heterogeneity). 
+Overall, exposure to corticosterone during development negatively impacted mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a). However, effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; Table @tbl-heterogeneity and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[1,"I2_study"]`% of variation being driven by differences among studies ($I^2_{study}$; Table @tbl-heterogeneity) and `r i2[1,"I2_tissue_sum"]`% of variation being driven by differences among tissues ($I^2_{tissue}$; Table @tbl-heterogeneity) with little to no variation explained by phylogeny (Table @tbl-heterogeneity). 
+
+Prenatal exposure to corticosterone had a larger negative impact on mitochondrial function than postnatal exposure ($SMD_{H}$ = `r MLMR_list_preprost[[1]]$b[2]`, 95% CI = `r MLMR_list_preprost[[1]]$ci.lb[2]` to `r MLMR_list_preprost[[1]]$ci.ub[2]`), however, this effect was not significant ($p$ = `r MLMR_list_preprost[[1]]$pval[2]`; [@fig-orchard_prepost]a).
+
+Mitochondrial function was supressed across all major functional categories in a similar fashion with no significant differences among functional categories ($Q_{M}$ = `r MLMR_list_Measure[[1]]$QM`, $df$ = `r MLMR_list_Measure[[1]]$QMdf[1]` and `r MLMR_list_Measure[[1]]$QMdf[2]`, $p$ = `r MLMR_list_Measure[[1]]$QMp` [@fig-orchard_measure]a), with treatment with high levels of corticostrone supressing respiration and metabolic capacity and increasing oxidative damage. 
+
+While effects appeared to be stronger in mammals, compared with birds and fish, there were no significant differences among classes ($Q_{T}$ = `r MLMR_list_taxa[[1]]$QM`, $df$ = `r MLMR_list_taxa[[1]]$QMdf[1]` and `r MLMR_list_taxa[[1]]$QMdf[2]`, $p$ = `r MLMR_list_taxa[[1]]$QMp`; [@fig-orchard_taxa]a). 
 
 ## Social deprivation developmental impacts on mitochondrial function
-Social deprevation studies were only ever done with mammals with all studies manipulating environments postnatally. Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; @tbl-heterogeneity), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (@tbl-heterogeneity). 
+Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (Table @tbl-heterogeneity). 
+
+Social deprevation studies were only ever done with mammals and all studies manipulated environments postnatally. 
 
 ## Disturbance developmental impacts on mitochondrial function
 
-Disturbance during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[3]])$estimate`, 95% CI = `r coef(summary_list[[3]])$ci.lb` to `r coef(summary_list[[3]])$ci.ub`, $p$ = `r coef(summary_list[[3]])$pval`; [@fig-orchard_int]c). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[3]])$pi.lb` to `r predict(summary_list[[3]])$pi.ub`; @tbl-heterogeneity), with substantial variation across studies ($I^2_{study}$ = `r i2[2,"I2_study"]`%)(@tbl-heterogeneity).
+Disturbance during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[3]])$estimate`, 95% CI = `r coef(summary_list[[3]])$ci.lb` to `r coef(summary_list[[3]])$ci.ub`, $p$ = `r coef(summary_list[[3]])$pval`; [@fig-orchard_int]c). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[3]])$pi.lb` to `r predict(summary_list[[3]])$pi.ub`; Table @tbl-heterogeneity), with substantial variation across studies ($I^2_{study}$ = `r i2[2,"I2_study"]`%)(Table @tbl-heterogeneity).
 
 Disturbance stress occured only postnatally in fish and birds, whereas in mammals disturbance stressors were also applied prenatally. 
 
 ## Nutrition developmental impacts on mitochondrial function
-Nutritional stress during development had limited impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; @tbl-heterogeneity), with variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%),  phylogeny ($I^2_{phylogeny}$ = `r i2[3,"I2_species_phylo"]`%) and tissue ($I^2_{tissue}$ = `r i2[3,"I2_tissue_sum"]`%) (@tbl-heterogeneity).
+Nutritional stress during development had limited impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%),  phylogeny ($I^2_{phylogeny}$ = `r i2[3,"I2_species_phylo"]`%) and tissue ($I^2_{tissue}$ = `r i2[3,"I2_tissue_sum"]`%) (Table @tbl-heterogeneity).
 
 ```{r, nurtition_models}
 #| label: nurtition_models
@@ -425,17 +437,17 @@ Nutritional stress during development had limited impact on mitochondrial functi
   nutri_data <- data_lists[[4]]
 
 # Have a look at categories and levels to identify gaps 
-  tabyl(nutri_data, nutrition_type, nutrition_sum) 
-  tabyl(nutri_data, nutrition_type, nutrition_sum, measurement_category) 
-  tabyl(nutri_data, nutrition_type, measurement_category) 
-  tabyl(nutri_data, nutrition_sum, measurement_category) 
-  tabyl(nutri_data, nutrition_type, class) 
-  tabyl(nutri_data, nutrition_sum, class) 
+  tabyl(nutri_data, nutrition_type, nutrition_sum) # No fat manipulatioon in under nutrition
+  tabyl(nutri_data, nutrition_type, measurement_category) # No repiratioon carbs 
+  tabyl(nutri_data, nutrition_sum, measurement_category) # Looks good
+  tabyl(nutri_data, nutrition_type, class) # Major tax bias. Carbs and fat mostly fish, protein mostly mammals
+  tabyl(nutri_data, nutrition_sum, class) # No overnutrition of amphibians
   
-
 rerun = FALSE
   if(rerun){
-    
+    #### -------------------------------------------------- ####
+    # 1.3   Over and under nutrition and nutrition type 
+    #### -------------------------------------------------- ####
       # Make sure obs is udpated for this dataset
         nutri_data$obs <- 1:nrow(nutri_data)
 
@@ -457,21 +469,53 @@ rerun = FALSE
                           data = nutri_data)
        # Save the model
         saveRDS(nutri_up_down, file = here("output", "models", "nutri_up_down.rds"))
+
+    #### -------------------------------------------------- ####
+    # 1.3   Over and under nutrition and measurement type  
+    #### -------------------------------------------------- ####
+  
+          nutri_up_down_measure <- rma.mv(SMDH ~ nutrition_sum*measurement_category, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = nutri_data)
+       # Save the model
+        saveRDS(nutri_up_down_measure, file = here("output", "models", "nutri_up_down_measure.rds"))
+
+
+    #### -------------------------------------------------- ####
+    # 1.3   Over and under nutrition and nutrition type - mammals only 
+    #### -------------------------------------------------- ####
+      # Mammals
+        nutri_data_mammals <- nutri_data %>% filter(class == "Mammalia")
+      # Make sure obs is udpated for this dataset
+        nutri_data_mammals$obs <- 1:nrow(nutri_data_mammals)
+
+      # Prune the tree to relevant taxa contained within this dataset.
+        tree_prune <- tree_checks(tree = phylo, dataCol = "species_phylo", data = nutri_data_mammals, type ="prune")
+
+      # Calculate the phylogenetic correlation matrix
+        phylo_cor <- vcv(tree_prune, cor = TRUE)
+
+        nutri_up_down_mammls <- rma.mv(SMDH ~ nutrition_sum + nutrition_type, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = nutri_data_mammals)
+        # Save the model
+        saveRDS(nutri_up_down_mammls, file = here("output", "models", "nutri_up_down_mammls.rds"))
       } else {
         nutri_up_down <- readRDS(here("output", "models", "nutri_up_down.rds"))
-  }
-
-  # Have a look at the model with orchaRd
-     orchard_plot(nutri_up_down, mod = "nutrition_type", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2) +  
-      ylim(-10,10) +
-      theme_classic() 
+        nutri_up_down_measure <- readRDS(here("output", "models", "nutri_up_down_measure.rds"))
+        nutri_up_down_mammls <- readRDS(here("output", "models", "nutri_up_down_mammls.rds"))
       
-     # + theme(legend.position = "top",
-                             # axis.title = element_text(size = 18),
-                             # axis.text = element_text(size = 12),
-                              #plot.tag = element_text(size = 24)) + scale_color_manual(values = "black") + scale_fill_manual(values = "gray")
-  # RVE to check robustness of results
- # robust_taxa <- lapply(nutri_up_down[c(1,3,4)], function(x) robust(x, cluster = x$data[,"study"]))
+  }
 
 ```
 
@@ -482,12 +526,22 @@ rerun = FALSE
 #| error: false
 #| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category."
   
-    plots  <- lapply(MLMA_list, function(x) orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2) +  
+  table <- lapply(data_lists, function(x) x  %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
+
+# Create coordinate system that is unique for each plot
+z = list(data.frame(x = 1.2, y = 5),
+         data.frame(x = 1.2, y = 5),
+         data.frame(x = 1.2, y = 5),
+         data.frame(x = 1.2, y = 5))
+
+    plots  <- mapply(function(x, y, z) orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  
                                                 ylim(-10,10) + scale_x_discrete(labels = "Overall") +
                                                 theme_classic() + theme(legend.position = "top",
                                                                         axis.title = element_text(size = 18),
+                                                                        plot.title = element_text(face = "bold", size = 16),
                                                                         axis.text = element_text(size = 12),
-                                                                        plot.tag = element_text(size = 24)) + scale_color_manual(values = "black") + scale_fill_manual(values = "gray"))
+                                                                        plot.tag = element_text(size = 24)) + scale_color_manual(values = "black") + scale_fill_manual(values = "gray") +
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMA_list, y = table, z = z, SIMPLIFY = FALSE)
 
 
     p_overall <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
@@ -511,10 +565,10 @@ measure_table <- lapply(data_lists, function(x) x  %>% group_by(measurement_cate
 z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)),
          data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
          data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2, 4.2, 5.2), y = rep(6,5)))
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(6,4)))
   
 # Apply orchard to each model and add the k and spp information to the plot
-  plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
+  plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
     annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, SIMPLIFY = FALSE)                                                 
@@ -566,7 +620,7 @@ z = list(data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
          data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
          data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)))
 
-    plots  <- mapply(function(x, y, z)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
+    plots  <- mapply(function(x, y, z)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24))+
     annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
@@ -598,13 +652,11 @@ z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
          data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
          data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)))
   
-    plots  <- mapply(function(x,y,z){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, at = list( sc_rel_total= c(-0.5, 0, 0.5)), by = "sc_rel_total", weights = "prop") +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
+    plots  <- mapply(function(x,y,z){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_RelDur_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
                                                                         
-
-
     p_prepost <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
     ggsave(here("output", "figures", "fig5.png"), p_prepost, width = 15, height = 8)
 
@@ -626,16 +678,16 @@ z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
 # Supplementary Materials
 
 
-
-```{r, tbl-heterogeneity_cv_m2}
-#| label: tbl-heterogeneity_cv_m2
-#| tbl-cap: "Heterogeneity estimates for developmental stressor datasets"
+```{r, tbl-heterogeneity_cv}
+#| label: tbl-heterogeneity_cv
+#| tbl-cap: "Heterogeneity estimates using CV for developmental stressor datasets"
 #| echo: false
 #| warning: false
 #| error: false
+#| eval: true
 
 #### -------------------------------------------------- ####
-#        Heterogeneity M2 and CV2 Tables
+#        Heterogeneity  CV2 Table
 #### -------------------------------------------------- ####
 
   # Create k and n columns for sample sizes
@@ -644,44 +696,53 @@ z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
   
   # Create table of cv2 Total and cv2 for each level
   cv2 <- make_het_tables(MLMA_list, size = size, type = "cv2")
-  m2 <- make_het_tables(MLMA_list, size = size, type = "m2")
-
+ 
 cv2$Stressor <- c("Corticosterone",  "Disturbance", "Nutrition", "Social Deprevation")
 cv2  <- cv2  %>% select(Stressor, everything())
-m2$Stressor <- c("Corticosterone",  "Disturbance", "Nutrition", "Social Deprevation")
-m2  <- m2  %>% select(Stressor, everything())
 
-# bind together
-cv2 <- bind_cols(cv2, m2[, -1]) 
-
-eq  <- c(
+eq1  <- c(
   "Stressor",
   "n_{effects}",
   "n_{species}",
   "n_{study}",
-  "I^2_{total} (\\%)",
-  "I^2_{study} (\\%)",
-  "I^2_{phylogeny} (\\%)",
-  "I^2_{tissue} (\\%)",
-  "I^2_{obs} (\\%)"
+  "CV^2_{total}",
+  "CV^2_{study}",
+  "CV^2_{phylogeny}",
+  "CV^2_{tissue}",
+  "CV^2_{obs}"
 )
 
-flextable(round_df(cv2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq))) %>% 
+flextable(round_df(cv2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq1))) %>% 
   width(j = c(1:9), width = c(1.5, rep(0.65, 8)))  %>%  compose(j = c(7,8), i = 4, value = as_paragraph("–"))
 ```
 
-
-```{r, breakdowns}
-#| label: breakdowns
+```{r,tbl-heterogeneity_m2}
+#| label: tbl-heterogeneity_m2
+#| tbl-cap: "Heterogeneity M2 "
 #| echo: false
 #| warning: false
-#| error: false 
+#| error: false
+#| eval: true
 
-#### -------------------------------------------------- ####
-#  Checking how data is distributed across levels in models
-#### -------------------------------------------------- ####
+# Create k and n columns for sample sizes
+    order <- c(1, 3, 4, 2)
+  size  <- data.frame(do.call("rbind", lapply(data_lists, function (x) x  %>% summarise(k = n(), species = n_distinct(species_phylo), study = n_distinct(study)))))  %>% slice(order)
+ m2 <- make_het_tables(MLMA_list, size = size, type = "m2")
+m2$Stressor <- c("Corticosterone",  "Disturbance", "Nutrition", "Social Deprevation")
+m2  <- m2  %>% select(Stressor, everything())
 
-  # Create a table of the number of effects per level
-  breakdowns <- lapply(data_lists, function(x) tabyl(x, measurement_category, stage, class))
+eq2  <- c(
+  "Stressor",
+  "n_{effects}",
+  "n_{species}",
+  "n_{study}",
+  "M^2_{total}",
+  "M^2_{study}",
+  "M^2_{phylogeny}",
+  "M^2_{tissue}",
+  "M^2_{obs}"
+)
 
+flextable(round_df(m2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq2))) %>% 
+  width(j = c(1:9), width = c(1.5, rep(0.65, 8)))  %>%  compose(j = c(7,8), i = 4, value = as_paragraph("–"))
 ```
