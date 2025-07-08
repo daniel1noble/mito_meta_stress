@@ -678,7 +678,6 @@ z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
 
 # Supplementary Materials
 
-
 ```{r, tbl-heterogeneity_cv}
 #| label: tbl-heterogeneity_cv
 #| tbl-cap: "Heterogeneity estimates using CV for developmental stressor datasets"
