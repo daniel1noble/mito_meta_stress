@@ -60,3 +60,29 @@ round_df <- function(df, digits = 2) {
   df[] <- lapply(df, function(x) if (is.numeric(x)) round(x, digits) else x)
   return(df)
 }
+
+
+#' @title make_het_tables
+#' @description Calculates heterogeneity statistics from a list of models
+#' @param mod_list List of models
+#' @param size Dataframe with size information (e.g., number of studies, species)
+#' @param type Type of heterogeneity statistic to calculate. Options are "i2", "cv2", or "m2".
+#' @details This function extracts heterogeneity statistics from a list of models and combines them into a single dataframe. It supports different types of heterogeneity statistics
+#' (i2, cv2, m2) and can handle multiple models.
+#' @return Dataframe with numeric columns rounded
+make_het_tables  <- function(mod_list, size, type = c("i2", "cv2", "m2")){
+  type = match.arg(type)
+
+  het  <- lapply(mod_list[c(1,3,4)], function (x) switch(type, "i2" = orchaRd::i2_ml(x),
+                                                              "cv2" = orchaRd::cv2_ml(x),
+                                                               "m2" = orchaRd::m2_ml(x)))
+  het  <- data.frame(do.call("rbind", het))
+  
+  het.2 <- lapply(mod_list[2], function (x) switch(type, "i2" = orchaRd::i2_ml(x),
+                                                        "cv2" = orchaRd::cv2_ml(x),
+                                                         "m2" = orchaRd::m2_ml(x)))
+  het.2 <- data.frame(do.call("rbind", het.2))
+  
+  het[4,c(1,2,5)] <- het.2
+  return(cbind(size, het))
+}
