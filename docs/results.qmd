@@ -79,10 +79,7 @@ A phylogeny was derived by first cross-checking taxa names using the Open Tree o
 
 #### *Multi-level Meta-Regression (MLMR) Models*
 
-After quantifying levels of heterogeneity in each of the different stressor datasets, we fit a series of multi-level meta-regression (MLMR) models to test our key questions. In all models, we included the same random effects as we used in our MLMA models, however, MLMR models differed in the moderators included because each stressor type had unique sources of heterogeneity that we expected would explain effect variance. A number of moderators were relevant to all stressor manipulation types and so were included in all models. These included: 1) measurement trait category (i.e., antioxidants, oxidative damage etc.), 2) relative total duration of stressor manipulation, 3) 
-We included relative total duration of stressor manipulation as a continuous moderator because we expected that longer durations of stressor manipulations would have larger impacts on mitochondrial function.
-We also fit a model comparing stage of development (i.e., pre- or post-natal) as a categorical moderator  to test whether pre- or post-natal manipulations had larger impacts on mitochondrial function. However, this moderator did not show differences between pre- and post-natal manipulations, was not relevant for some manipulations (e.g., social deprivation because only one stage was manipulated), and was redundant with relative duration of stressor. As such, we include results and plots for this model in the supplementary materials [@fig-orchard_prepost].
-We fit models assuming heteroscedastic variation among levels of moderators to capture differences in effect variation. 
+After quantifying levels of heterogeneity in each of the different stressor datasets, we fit a series of multi-level meta-regression (MLMR) models to test our key questions. In all models, we included the same random effects as we used in our MLMA models, however, MLMR models differed in the moderators included because each stressor type had unique sources of heterogeneity that we expected would explain effect variance. A number of moderators were relevant to all stressor manipulation types and were included in all models. These included: 1) measurement trait category (i.e., antioxidants, oxidative damage etc.), 2) relative total duration of stressor manipulation and stage of manipulation (pre-natal/post-natal or both), and 3) taxa (i.e., class: mammals, birds, amphibians, fish). Some stressor categories were made up of a single class (e.g., social deprivation was only done in mammals) and so we did not include the taxa moderator in these models. We included relative total duration of stressor manipulation as a continuous moderator because we expected that longer durations of stressor manipulations would have larger impacts on mitochondrial function. We fit models assuming heteroscedastic variation among levels of a given moderators to capture differences in effect variation. 
 
 
 # Results
@@ -166,12 +163,7 @@ We fit models assuming heteroscedastic variation among levels of moderators to c
   size  <- data.frame(do.call("rbind", lapply(data_lists, function (x) x  %>% summarise(k = n(), species = n_distinct(species_phylo), study = n_distinct(study)))))  %>% slice(order)
   
   # Create table of I2 Total and I2 for each level
-  i2  <- lapply(MLMA_list[c(1,3,4)], function (x) orchaRd::i2_ml(x))
-  i2  <- data.frame(do.call("rbind", i2))
-  i2.2  <- lapply(MLMA_list[2], function (x) orchaRd::i2_ml(x))
-  i2.2 <- data.frame(do.call("rbind", i2.2))
-  i2[4,c(1,2,5)] <- i2.2
-  i2  <- cbind(size, i2)
+  i2 <- make_het_tables(MLMA_list, size = size, type = "i2")
 
 i2$Stressor <- c("Corticosterone",  "Disturbance", "Nutrition", "Social Deprevation")
 i2  <- i2  %>% select(Stressor, everything())
@@ -511,13 +503,24 @@ rerun = FALSE
 #| warning: false
 #| error: false
 #| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category for the different measurement types."
+
+# Get summary data for levels
+measure_table <- lapply(data_lists, function(x) x  %>% group_by(measurement_category) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
+
+# Create coordinate system that is unique for each plot
+z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2, 5.2), y = rep(6,5)))
   
-    plots  <- lapply(MLMR_list_Measure, function(x) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
+# Apply orchard to each model and add the k and spp information to the plot
+  plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
                                                       axis.text = element_text(size = 12),
-                                                       plot.tag = element_text(size = 24))) 
-                                                                        #+ #scale_color_manual(values = "black") + #scale_fill_manual(values = "gray"))
+                                                       plot.tag = element_text(size = 24)) +
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, SIMPLIFY = FALSE)                                                 
 
 
+# Create a layout for the plots
     p_measure <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
     ggsave(here("output", "figures", "fig2.png"), p_measure, width = 15.5, height = 15.5)
 
@@ -555,10 +558,19 @@ rerun = FALSE
         # Get the image for that UUID
         fish <- get_phylopic(uuid = uuid_fish)
 
-    plots  <- lapply(MLMR_list_taxa[c(1,3,4)], function(x) orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
+  # Get summary data for levels
+taxa_table <- lapply(data_lists, function(x) x  %>% group_by(class) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
+
+# Create coordinate system that is unique for each plot
+z = list(data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)))
+
+    plots  <- mapply(function(x, y, z)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
                                                       axis.text = element_text(size = 12),
-                                                       plot.tag = element_text(size = 24)))  
-                                                                        #+ #scale_color_manual(values = "black") + #scale_fill_manual(values = "gray"))
+                                                       plot.tag = element_text(size = 24))+
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
+                                                       
 ann1 <- function() {list(add_phylopic(img = mammal, x = 3.2, y = -8, height = 0.45),
                          add_phylopic(img = bird, x = 2.2, y = -8, height = 0.45), add_phylopic(img = fish, x = 1.2, y = -8, height = 0.35))}
 ann2 <- function() {list(add_phylopic(img = mammal, x = 4.2, y = -8, height = 0.45),
@@ -577,14 +589,23 @@ ann2 <- function() {list(add_phylopic(img = mammal, x = 4.2, y = -8, height = 0.
 #| warning: false
 #| error: false
 #| fig-cap: "Orchard plots showing the overall meta-analytic mean effect size and 95% prediction intervals for each stressor category for pre-natal versus postnatal manipulations."
+
+ # Get summary data for levels
+prepost_table <- lapply(data_lists, function(x) x  %>% group_by(stage) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
+
+# Create coordinate system that is unique for each plot
+z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
+         data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)))
   
-    plots  <- lapply(MLMR_list_RelDur_preprost[c(1,3,4)], function(x) orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, at = list( sc_rel_total= c(-0.5, 0, 0.5)), by = "sc_rel_total", weights = "prop" ) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
+    plots  <- mapply(function(x,y,z){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, at = list( sc_rel_total= c(-0.5, 0, 0.5)), by = "sc_rel_total", weights = "prop") +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18),
                                                       axis.text = element_text(size = 12),
-                                                       plot.tag = element_text(size = 24))) 
-                                                                        #+ #scale_color_manual(values = "black") + #scale_fill_manual(values = "gray"))
+                                                       plot.tag = element_text(size = 24)) +
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_RelDur_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
+                                                                        
 
 
-    p_prepost <- (plots[[1]] + ggtitle("Corticosterone") + plots[[3]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    p_prepost <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
     ggsave(here("output", "figures", "fig5.png"), p_prepost, width = 15, height = 8)
 
     p_prepost <- image_read(here("output", "figures", "fig5.png"))
@@ -603,6 +624,52 @@ ann2 <- function() {list(add_phylopic(img = mammal, x = 4.2, y = -8, height = 0.
 
 
 # Supplementary Materials
+
+
+
+```{r, tbl-heterogeneity_cv_m2}
+#| label: tbl-heterogeneity_cv_m2
+#| tbl-cap: "Heterogeneity estimates for developmental stressor datasets"
+#| echo: false
+#| warning: false
+#| error: false
+
+#### -------------------------------------------------- ####
+#        Heterogeneity M2 and CV2 Tables
+#### -------------------------------------------------- ####
+
+  # Create k and n columns for sample sizes
+    order <- c(1, 3, 4, 2)
+  size  <- data.frame(do.call("rbind", lapply(data_lists, function (x) x  %>% summarise(k = n(), species = n_distinct(species_phylo), study = n_distinct(study)))))  %>% slice(order)
+  
+  # Create table of cv2 Total and cv2 for each level
+  cv2 <- make_het_tables(MLMA_list, size = size, type = "cv2")
+  m2 <- make_het_tables(MLMA_list, size = size, type = "m2")
+
+cv2$Stressor <- c("Corticosterone",  "Disturbance", "Nutrition", "Social Deprevation")
+cv2  <- cv2  %>% select(Stressor, everything())
+m2$Stressor <- c("Corticosterone",  "Disturbance", "Nutrition", "Social Deprevation")
+m2  <- m2  %>% select(Stressor, everything())
+
+# bind together
+cv2 <- bind_cols(cv2, m2[, -1]) 
+
+eq  <- c(
+  "Stressor",
+  "n_{effects}",
+  "n_{species}",
+  "n_{study}",
+  "I^2_{total} (\\%)",
+  "I^2_{study} (\\%)",
+  "I^2_{phylogeny} (\\%)",
+  "I^2_{tissue} (\\%)",
+  "I^2_{obs} (\\%)"
+)
+
+flextable(round_df(cv2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq))) %>% 
+  width(j = c(1:9), width = c(1.5, rep(0.65, 8)))  %>%  compose(j = c(7,8), i = 4, value = as_paragraph("–"))
+```
+
 
 ```{r, breakdowns}
 #| label: breakdowns
