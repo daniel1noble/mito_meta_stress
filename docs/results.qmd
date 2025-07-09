@@ -75,7 +75,7 @@ We analysed our data using multilevel meta-analytic (MLMA) and meta-regression (
 
 #### *Multi-level Meta-analysis (MLMA) Models*
 
-Using data subsets for each of our major stressor categories, we first fit multi-level meta-analysis (MLMA) models (i.e., intercept-only models) with $SMD_{H}$, that included study, tissue type, and phylogeny as random effects to account for non-independence and identify sources of variability. We also explored models that included species and sample dependency as random effects but these were highly confounded with phylogeny and study so we simplified models by removing these terms. Given *metafor* does not estimate a residual variance by default we also included an observation-level random effect in our models. The size of datasets varied in the number of species and tissues (@tbl-heterogeneity). As such, we simplified the random effect structure for some datasets; including only random effects with six or more levels. Our MLMA models allowed us to partition variation in $SMD_{H}$ among these key sources while accounting for total sampling variance. We took a pluralistic approach to heterogeneity reporting, by reporting absolute ($\sigma^2$), relative (i.e., $I_{total}^2$, *sensu* @Nakagawa2012-oc; @Noble2022-ty) and magnitude measures (both $CV_{total}$ and $M_{total}$) of heterogeneity  as suggested by @Yang2023. We also report each of their stratified versions for each random effect level [@Nakagawa2012-oc; @Yang2023]. We also present 95% prediction intervals which describe the expected distribution of effects from future studies [@Nakagawa2021-ls; @Noble2022-ty].
+Using data subsets for each of our major stressor categories, we first fit multi-level meta-analysis (MLMA) models (i.e., intercept-only models) with $SMD_{H}$, that included study, tissue type, and phylogeny as random effects to account for non-independence and identify sources of variability. We also explored models that included species and sample dependency as random effects but these were highly confounded with phylogeny and study so we simplified models by removing these terms. Given *metafor* does not estimate a residual variance by default we also included an observation-level random effect in our models. The size of datasets varied in the number of species and tissues (Table @tbl-heterogeneity). As such, we simplified the random effect structure for some datasets; including only random effects with six or more levels. Our MLMA models allowed us to partition variation in $SMD_{H}$ among these key sources while accounting for total sampling variance. We took a pluralistic approach to heterogeneity reporting, by reporting absolute ($\sigma^2$), relative (i.e., $I_{total}^2$, *sensu* @Nakagawa2012-oc; @Noble2022-ty) and magnitude measures (both $CV_{total}$ and $M_{total}$) of heterogeneity  as suggested by @Yang2023. We also report each of their stratified versions for each random effect level [@Nakagawa2012-oc; @Yang2023]. We also present 95% prediction intervals which describe the expected distribution of effects from future studies [@Nakagawa2021-ls; @Noble2022-ty].
 
 A phylogeny was derived by first cross-checking taxa names using the Open Tree of Life (OTL) with the *rotl* package in R (vers. `r utils::packageVersion("rotl")`) [@Michonneau2016-if], and plotting taxa using *ggtree* to visualize the tree (vers. `r utils::packageVersion("ggtree")`) [@Yu2017-wj]. We resolved any taxa names that were outdated or changed. Once names in the dataset and *rotl* database matched we exported species names and built a time calibrated phylogeny for the species in our dataset using TimeTree [timetree.org;  @kumar2022timetree]. We used the R packages *ape* (vers. `r utils::packageVersion("ape")`) [@Paradis2019-gx] and *phytools* (vers. `r utils::packageVersion("phytools")`) [@Revell2012-vq] to prune the tree for individual analyses and calculate phylogenetic correlation matrices used in meta-analytic models.
 
@@ -83,7 +83,11 @@ A phylogeny was derived by first cross-checking taxa names using the Open Tree o
 
 After quantifying levels of heterogeneity in each of the different stressor datasets, we fit a series of multi-level meta-regression (MLMR) models to test our key questions. In all models, we included the same random effects as we used in our MLMA models, however, MLMR models differed in the moderators included because each stressor type had unique sources of heterogeneity that we expected would explain effect variance. Despite this, a number of moderators were relevant to all stressor manipulation types and were included in all models. These included: 1) measurement trait category (i.e., antioxidants, oxidative damage etc.), 2) stage of manipulation (pre-natal/post-natal or both) and 3) taxa (i.e., class: mammals, birds, amphibians, fish). Some stressor categories were made up of a single class (e.g., social deprivation was only done in mammals) and so we did not include the taxa moderator in these models. We fit models assuming heteroscedastic variation among levels of a given moderators to capture differences in effect variation. 
 
-We had a substantially larger dataset of studies measuring nutritional stress. These studies were more variable and so we included some additional moderators to capture variation in effects. These included: 1) whether the nutritional manipulation involved over or under nutrition and 2) the type of nutritional manipulation done (e.g., high fat, low protein, etc.). We expected that the different measurement categories would exhibit different responses to nutritional stress and so we also included an interaction between measurement category and nutritional manipulation type. Data exploration showed gaps across taxa in the types of nutritional manipulations done, with mammals showing clear differences in the type of manipulation. As such, we subset mammals out and refit these models in this group only. 
+We had a substantially larger dataset of studies measuring nutritional stress. These studies were more variable and so we included some additional moderators to capture variation in effects. These included: 1) whether the nutritional manipulation involved over or under nutrition and 2) the type of nutritional manipulation done (e.g., high fat, low protein, etc.). We expected that the different measurement categories may exhibit different responses to nutritional stress and so we also included an interaction between measurement category and over/under nutrition. However, we did not have enough data to estimate an interaction between manipulation type and functional category. We included models with nutrition type, under/over nutrition and a combined model with both main effects and evaluated support among models using AIC, choosing the simplest model (fewest estimated parameters) when the $\Delta$AIC values were within 2 units of each other. 
+
+#### Publication Bias
+
+We tested for evidence of publication bias by visually exploring funnel plots and 
 
 # Results
 
@@ -473,7 +477,7 @@ In total, we collected  `r sum(i2$k)` effect sizes from `r length(unique(data$sp
 #| echo: false
 #| warning: false
 #| error: false
-#| fig-cap: "**Overall meta-analytic mean estimates for each developmental stressor category (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are provided for each stressor category. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision)."
+#| fig-cap: "**Overall meta-analytic mean estimates for each developmental stressor category (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are provided for each stressor category. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation."
   
   table <- lapply(data_lists, function(x) x  %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
 
@@ -484,7 +488,7 @@ z = list(data.frame(x = 1.2, y = 5),
          data.frame(x = 1.2, y = 5))
 
     plots  <- mapply(function(x, y, z) orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  
-                                                ylim(-10,10) + scale_x_discrete(labels = "Overall") +
+                                                ylim(-8,8) + scale_x_discrete(labels = "Overall") +
                                                 theme_classic() + theme(legend.position = "top",
                                                                         axis.title = element_text(size = 18),
                                                                         plot.title = element_text(face = "bold", size = 16),
@@ -494,7 +498,7 @@ z = list(data.frame(x = 1.2, y = 5),
 
 
     p_overall <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig1.png"), p_overall, width = 10.2, height = 7)
+    ggsave(here("output", "figures", "fig1.png"), p_overall, width = 13.283950, height = 7.864197)
 
     p_overall <- image_read(here("output", "figures", "fig1.png"))
     p_overall
@@ -516,19 +520,19 @@ While effects appeared to be stronger in mammals, there were no significant diff
 #| echo: false
 #| warning: false
 #| error: false
-#| fig-cap: "**Overall meta-analytic mean estimates across each functional trait category for each developmental stressor type (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each trait category. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision)."
+#| fig-cap: "**Overall meta-analytic mean estimates across each functional trait category for each developmental stressor type (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each trait category. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation."
 
 # Get summary data for levels
 measure_table <- lapply(data_lists, function(x) x  %>% group_by(measurement_category) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
 
 # Create coordinate system that is unique for each plot
-z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(6,4)))
+z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4,4)))
   
 # Apply orchard to each model and add the k and spp information to the plot
-  plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+  plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
     annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, SIMPLIFY = FALSE)                                                 
@@ -536,7 +540,7 @@ z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)),
 
 # Create a layout for the plots
     p_measure <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig2.png"), p_measure, width = 15.5, height = 15.5)
+    ggsave(here("output", "figures", "fig2.png"), p_measure, width = 15.09877, height = 10.11111)
 
     p_measure <- image_read(here("output", "figures", "fig2.png"))
     p_measure
@@ -553,7 +557,7 @@ Social deprevation studies were only ever done with mammals, and all studies man
 #| echo: false
 #| warning: false
 #| error: false
-#| fig-cap: "**Overall meta-analytic mean estimates for each taxonomic group (class) across developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each class. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision)"
+#| fig-cap: "**Overall meta-analytic mean estimates for each taxonomic group (class) across developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each class. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation."
   
     # get silouettes for taxa
      
@@ -582,22 +586,22 @@ Social deprevation studies were only ever done with mammals, and all studies man
 taxa_table <- lapply(data_lists, function(x) x  %>% group_by(class) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
 
 # Create coordinate system that is unique for each plot
-z = list(data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(5, 4)))
+z = list(data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)))
 
-    plots  <- mapply(function(x, y, z)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+    plots  <- mapply(function(x, y, z)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24))+
     annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
                                                        
-ann1 <- function() {list(add_phylopic(img = mammal, x = 3.2, y = -8, height = 0.45),
-                         add_phylopic(img = bird, x = 2.2, y = -8, height = 0.45), add_phylopic(img = fish, x = 1.2, y = -8, height = 0.35))}
-ann2 <- function() {list(add_phylopic(img = mammal, x = 4.2, y = -8, height = 0.45),
-                         add_phylopic(img = bird, x = 3.2, y = -8, height = 0.45),
-                         add_phylopic(img = amphib, x = 2.2, y = -8, height = 0.35), add_phylopic(img = fish, x = 1.2, y = -8, height = 0.35))}
+ann1 <- function() {list(add_phylopic(img = mammal, x = 3.3, y = -5, height = 0.45),
+                         add_phylopic(img = bird, x = 2.3, y = -5, height = 0.45), add_phylopic(img = fish, x = 1.3, y = -5, height = 0.35))}
+ann2 <- function() {list(add_phylopic(img = mammal, x = 4.3, y = -5, height = 0.45),
+                         add_phylopic(img = bird, x = 3.3, y = -5, height = 0.45),
+                         add_phylopic(img = amphib, x = 2.3, y = -5, height = 0.35), add_phylopic(img = fish, x = 1.3, y = -5, height = 0.35))}
     p_taxa <- (plots[[1]] + ann1() + ggtitle("Corticosterone") + plots[[2]] + ann1() + ggtitle("Disturbance") + plots[[3]] + ann2() + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig3.png"), p_taxa, width = 15, height = 5)
+    ggsave(here("output", "figures", "fig3.png"), p_taxa, width = 17.407407, height = 6.358025)
 
     p_taxa <- image_read(here("output", "figures", "fig3.png"))
     p_taxa
@@ -617,23 +621,23 @@ Disturbance stress occured only postnatally in fish and birds, whereas in mammal
 #| echo: false
 #| warning: false
 #| error: false
-#| fig-cap: "**Overall meta-analytic mean estimates different stages of manipulation (pre-natal, post-natal or both) across different developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each stage. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision)"
+#| fig-cap: "**Overall meta-analytic mean estimates different stages of manipulation (pre-natal, post-natal or both) across different developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each stage. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation."
 
  # Get summary data for levels
 prepost_table <- lapply(data_lists, function(x) x  %>% group_by(stage) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
 
 # Create coordinate system that is unique for each plot
-z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
-         data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(5, 3)))
+z = list(data.frame(x = c(1.2, 2.2), y = rep(4, 2)),
+         data.frame(x = c(1.2, 2.2), y = rep(4, 2)),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)))
   
-    plots  <- mapply(function(x,y,z){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-10,10) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+    plots  <- mapply(function(x,y,z){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
     annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
                                                                         
     p_prepost <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig5.png"), p_prepost, width = 15, height = 8)
+    ggsave(here("output", "figures", "fig5.png"), p_prepost, width = 16.679012, height = 5.419753)
 
     p_prepost <- image_read(here("output", "figures", "fig5.png"))
     p_prepost
@@ -641,16 +645,14 @@ z = list(data.frame(x = c(1.2, 2.2), y = rep(5, 2)),
 
 
 ## Nutrition developmental impacts on mitochondrial function
-Nutritional stress during development had a weaker negative impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%),  phylogeny ($I^2_{phylogeny}$ = `r i2[3,"I2_species_phylo"]`%) and tissue ($I^2_{tissue}$ = `r i2[3,"I2_tissue_sum"]`%) (Table @tbl-heterogeneity).
-
-
 
 ```{r, nurtition_models}
 #| label: nurtition_models
 #| echo: false
-#| eval: false  
+#| eval: true  
 #| warning: false
 #| error: false
+#| include: false
 
 #### -------------------------------------------------- ####
 # 1.3   Nutrition moderator models 
@@ -669,7 +671,7 @@ Nutritional stress during development had a weaker negative impact on mitochondr
   tabyl(nutri_data, nutrition_sum, class) # No overnutrition of amphibians
   
 rerun = FALSE
-  if(rerun){
+if(rerun){
     #### -------------------------------------------------- ####
     # 1.3   Over and under nutrition and nutrition type 
     #### -------------------------------------------------- ####
@@ -684,7 +686,7 @@ rerun = FALSE
 
       # # Fit the MLMR model for each dataset but note that social deprivation only has one level for class so cannot fit this model
 
-          nutri_up_down <- rma.mv(SMDH ~ nutrition_sum + nutrition_type, V = v_SMDH, 
+          nutri_up_down <- rma.mv(SMDH ~ nutrition_sum, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
                                           ~1| tissue_sum,
@@ -695,11 +697,35 @@ rerun = FALSE
        # Save the model
         saveRDS(nutri_up_down, file = here("output", "models", "nutri_up_down.rds"))
 
+       nutri_type <- rma.mv(SMDH ~ nutrition_type, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = nutri_data)                   
+        # Save the model
+        saveRDS(nutri_type, file = here("output", "models", "nutri_type.rds"))
+
+        nutri_type_sum <- rma.mv(SMDH ~ nutrition_type + nutrition_sum, V = v_SMDH, 
+                              random = list(~1| study, 
+                                            ~1| species_phylo,
+                                            ~1| tissue_sum,
+                                            ~1| obs),
+                              R = list(species_phylo = phylo_cor), test = "t", 
+                          data = nutri_data)
+       # Save the model
+        saveRDS(nutri_type_sum, file = here("output", "models", "nutri_type_sum.rds"))
+      
+      
+        AIC(nutri_type_sum, nutri_type, nutri_up_down)  # Most parsimonious model is nutri_type
+
     #### -------------------------------------------------- ####
     # 1.3   Over and under nutrition and measurement type  
     #### -------------------------------------------------- ####
   
-          nutri_up_down_measure <- rma.mv(SMDH ~ nutrition_sum*measurement_category, V = v_SMDH, 
+          nutri_up_down_measure <- rma.mv(SMDH ~ nutrition_sum * measurement_category, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
                                           ~1| tissue_sum,
@@ -725,7 +751,7 @@ rerun = FALSE
       # Calculate the phylogenetic correlation matrix
         phylo_cor <- vcv(tree_prune, cor = TRUE)
 
-        nutri_up_down_mammls <- rma.mv(SMDH ~ nutrition_sum + nutrition_type, V = v_SMDH, 
+        nutri_up_down_mammls <- rma.mv(SMDH ~ nutrition_sum, V = v_SMDH, 
                             random = list(~1| study, 
                                           ~1| species_phylo,
                                           ~1| tissue_sum,
@@ -735,12 +761,78 @@ rerun = FALSE
                           data = nutri_data_mammals)
         # Save the model
         saveRDS(nutri_up_down_mammls, file = here("output", "models", "nutri_up_down_mammls.rds"))
-      } else {
-        nutri_up_down <- readRDS(here("output", "models", "nutri_up_down.rds"))
+
+         nutri_type_mammls <- rma.mv(SMDH ~ nutrition_type, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = nutri_data_mammals)     
+
+        # Save the model
+        saveRDS(nutri_type_mammls, file = here("output", "models", "nutri_type_mammls.rds"))
+
+        nutri_type_sum_mammls <- rma.mv(SMDH ~ nutrition_type + nutrition_sum, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = nutri_data_mammals)    
+        # Save the model
+        saveRDS(nutri_type_sum_mammls, file = here("output", "models", "nutri_type_sum_mammls.rds"))
+    
+        AIC(nutri_type_sum_mammls, nutri_type_mammls, nutri_up_down_mammls)  # Most parsimonious model is nutri_type_sum_mammls
+} else {
+                nutri_up_down <- readRDS(here("output", "models", "nutri_up_down.rds"))
+                   nutri_type <- readRDS(here("output", "models", "nutri_type.rds"))
+               nutri_type_sum <- readRDS(here("output", "models", "nutri_type_sum.rds"))
+        
         nutri_up_down_measure <- readRDS(here("output", "models", "nutri_up_down_measure.rds"))
-        nutri_up_down_mammls <- readRDS(here("output", "models", "nutri_up_down_mammls.rds"))
+        
+         nutri_up_down_mammls <- readRDS(here("output", "models", "nutri_up_down_mammls.rds"))
+            nutri_type_mammls <- readRDS(here("output", "models", "nutri_type_mammls.rds"))
+        nutri_type_sum_mammls <- readRDS(here("output", "models", "nutri_type_sum_mammls.rds"))
       
-  }
+}
+
+```
+
+Nutritional stress during development had a weaker negative impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%),  phylogeny ($I^2_{phylogeny}$ = `r i2[3,"I2_species_phylo"]`%) and tissue ($I^2_{tissue}$ = `r i2[3,"I2_tissue_sum"]`%) (Table @tbl-heterogeneity). 
+
+Importantly, there was a taxonomic bias in the types of nutritional manipulations done, with fish studies being the only ones to manipulate carbohydrates; only total food was manipulated across all classes. Under- or over-nutrition did not significantly differ in their impacts on mitochondrial function ($Q_{M}_{`r nutri_up_down$QMdf[1]`, `r nutri_up_down$QMdf[2]`}$ = `r nutri_up_down$QM`, $p$ = `r nutri_up_down$QMp`; [@fig-orchard_nutrition]a) and there was weak evidence for an interaction between measurement type and under/over-nutrition ($Q_{M}_{`r nutri_up_down_measure$QMdf[1]`, `r nutri_up_down_measure$QMdf[2]`}$ = `r nutri_up_down_measure$QM`, $p$ = `r nutri_up_down_measure$QMp`). In fact, there was little evidence that mitochodnrial function differed across functional trait categories generally ([@fig-orchard_measure]d). The best supported model, suggested, protein and fat manipulations did have a larger negative impact on mitochondrial function compared to carbohydrate manipulations but this effect was confounded with taxonomic class where only mammals had protein manipulations (Protein Contrast $SMD_{H}$ = `r nutri_type$b[3]`, 95% CI: `r nutri_type$ci.lb[3]` to `r nutri_type$ci.ub[3]`, $p$ = `r nutri_type$pval[3]`; Fat Contrast $SMD_{H}$ = `r nutri_type$b[2]`, 95% CI: `r nutri_type$ci.lb[2]` to `r nutri_type$ci.ub[2]`, $p$ = `r nutri_type$pval[2]` [@fig-orchard_nutrition]b). There was no evidence that the stage of manipulation when nutritional stress took place impacted mitochondrial function ([@fig-orchard_prepost]d). 
+
+```{r, fig-orchard_nutrition}
+#| label: fig-orchard_nutrition
+#| echo: false
+#| warning: false     
+#| error: false
+#| fig-cap: "**Overall meta-analytic mean estimates for nutritional stressors (a) under- and over-nutrition and (b) nutrition type**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each stressor  type. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation."   
+
+
+# Get summary data for levels
+ nutri_table <- nutri_data  %>% group_by(nutrition_type) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()) 
+ nutri_table2 <- nutri_data  %>% group_by(nutrition_sum) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n())
+
+p_up_down <- orchard_plot(nutri_up_down, mod = "nutrition_sum", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) + 
+  ylim(-8,8) + theme_classic() + 
+  theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16), axis.text = element_text(size = 12), plot.tag = element_text(size = 24)) + 
+  annotate("text",y = c(rep(5, 2)), x = c(1.10, 2.10), label = TeX(paste0("\\textit{k} = ", nutri_table2$k, " (", nutri_table2$studies, ")")), size = 5, hjust = 0)
+
+p_type <- orchard_plot(nutri_type, mod = "nutrition_type", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) + 
+  ylim(-8,8) + theme_classic() + 
+  theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16), axis.text = element_text(size = 12), plot.tag = element_text(size = 24)) + 
+  annotate("text", y = c(rep(5, 4)), x = c(1.10, 2.10, 3.10, 4.10), label = TeX(paste0("\\textit{k} = ", nutri_table$k, " (", nutri_table$studies, ")")), size = 5, hjust = 0)
+  
+p_nutr <- p_up_down + p_type + plot_annotation(tag_levels = "a", tag_suffix = ")")
+ggsave(here("output", "figures", "fig4.png"), p_nutr, width = 14.135802, height = 6.283951)
+
+# Read in the image
+p_nutr <- image_read(here("output", "figures", "fig4.png"))
+p_nutr
 
 ```
 
