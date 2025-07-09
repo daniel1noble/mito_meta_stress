@@ -47,6 +47,11 @@ editor:
 
     data_lists  <- lapply(data_lists, function(x) mutate(x, depend = interaction(sample_depend, study)))
 
+     data_lists <- lapply(data_lists, function(x) x %>% 
+                          mutate(inv_n = (n_t1 + n_t2) / (n_t1 * n_t2),
+                            sqrt_inv_n = sqrt(inv_n),
+                                  ef_n = (4 * n_t1 * n_t2)/(n_t1 + n_t2))) # Effective sample size
+
 # All data summary
   data <- plyr::ldply(data_lists)
 
@@ -87,7 +92,7 @@ We had a substantially larger dataset of studies measuring nutritional stress. T
 
 #### Publication Bias
 
-We tested for evidence of publication bias by visually exploring funnel plots and 
+Publication bias was checked by first visually exploring plots between each effect size and its precision (1 / SE) for each stressor type (i.e., funnel plots). Importantly, funnel asymmetry can be caused by non-independence and high heterogeneity. As such, we tested for publication bias more formally by altering our overall MLMA models to include the square root inverse effective sample size as a moderator [@Nakagawa2022-gy]. We used the inverse effective sample size because the sampling variance of SMDH includes the effect size itself in its calculation inducing a correlation [@Nakagawa2022-gy]. This method allows one to test for publication bias inferentially. When the slope of the moderator is significantly different from zero, it indicates that publication bias is potentially present. If the slope was significant, we refit models with the inverse effective sample size (not square rooted) because this provides an unbiased estimate of the meta-analytic mean (intercept) [@Nakagawa2022-gy]. Of course, we can never be certain publication bias is truly ever present so these analyses should be viewed as a sensitivity analysis to check the robustness of our results.
 
 # Results
 
@@ -470,6 +475,87 @@ rerun = FALSE
   mammals_sp <- data %>% filter(class == "Mammalia") %>% reframe(sp = unique(species_phylo2))
 ```
 
+
+```{r, mlma_pubias}
+#| label: mlma_pubias
+#| echo: false
+#| warning: false
+#| error: false
+
+#### -------------------------------------------------- ####
+# 1.            Multi-level Meta-analysis            
+#### -------------------------------------------------- ####
+  
+  rerun = FALSE
+  if(rerun){
+    
+    # Create list to store models
+    MLMA_list_pubbias_se <- list()
+    MLMA_list_pubbias_v <- list()
+    
+    for(i in 1:length(data_lists)){
+      # Add observation level random effect
+        data_lists[[i]]$obs <- 1:nrow(data_lists[[i]])
+
+      # Prune the tree to relevant taxa contained within this dataset.
+        tree_prune <- tree_checks(tree = phylo, dataCol = "species_phylo", data = data_lists[[i]], type ="prune")
+
+      # Calculate the phylogenetic correlation matrix
+        phylo_cor <- vcv(tree_prune, cor = TRUE)
+
+      # Fit the MLMA model for each dataset. Vary random effects structure based on levels of the random effects in the dataset
+     
+      if(i == 2){
+          MLMA_list_pubbias_se[[i]] <- rma.mv(SMDH ~ 1 + sqrt_inv_n, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| obs),
+                          test = "t",  
+                          data = data_lists[[i]])
+      } else {
+          MLMA_list_pubbias_se[[i]] <- rma.mv(SMDH ~ 1 + sqrt_inv_n, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = data_lists[[i]])
+      }
+
+      if(i == 2){
+          MLMA_list_pubbias_v[[i]] <- rma.mv(SMDH ~ 1 + inv_n, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| obs),
+                          test = "t",  
+                          data = data_lists[[i]])
+      } else {
+          MLMA_list_pubbias_v[[i]] <- rma.mv(SMDH ~ 1 + inv_n, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = data_lists[[i]])
+      }
+      
+      # Add names to make sure we keep track of which dataset is which model                      
+        names(MLMA_list_pubbias_se)[i] <- names(data_lists)[i]
+        names(MLMA_list_pubbias_v)[i] <- names(data_lists)[i]
+    }
+      
+    # Save the model
+        saveRDS(MLMA_list_pubbias_se, file = here("output", "models", "MLMA_list_pubbias_se.rds"))
+        saveRDS(MLMA_list_pubbias_v, file = here("output", "models", "MLMA_list_pubbias_v.rds"))
+
+  } else {
+        MLMA_list_pubbias_se <- readRDS(here("output", "models", "MLMA_list_pubbias_se.rds"))
+        MLMA_list_pubbias_v <- readRDS(here("output", "models", "MLMA_list_pubbias_v.rds"))
+  }
+
+
+```
+
 In total, we collected  `r sum(i2$k)` effect sizes from `r length(unique(data$species_phylo))` species (@fig-phylo) and `r length(unique(data$study))` studies across the different stressors (Table @tbl-heterogeneity). There were clear taxonomic biases. The majority of effects came from studies on mammals (effects = `r taxa_table[1,2]`, studies = `r taxa_table[1,4]`), and these were only from `r taxa_table[1,3]` species (*Mus musculus*, *Rattus norvegicus*, *Ovis aries* and *Capra hircus*). Fish had the second most effects (`r taxa_table[2,2]`, species = `r taxa_table[2,3]` and studies = `r taxa_table[2,4]`) followed by birds (`r taxa_table[3,2]`, species = `r taxa_table[3,3]` and studies = `r taxa_table[3,4]`) and amphibians (`r taxa_table[4,2]`, species = `r taxa_table[4,3]` from only `r taxa_table[4,4]` study). 
 
 ```{r, fig-orchard_int}
@@ -506,7 +592,7 @@ z = list(data.frame(x = 1.2, y = 5),
 
 ## Corticosterone developmental impacts on mitochondrial function
 
-Overall, exposure to corticosterone during development negatively impacted mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; Table @tbl-heterogeneity and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[1,"I2_study"]`% of variation being driven by differences among studies ($I^2_{study}$; Table @tbl-heterogeneity) and `r i2[1,"I2_tissue_sum"]`% of variation being driven by differences among tissues ($I^2_{tissue}$; Table @tbl-heterogeneity) with little to no variation explained by phylogeny (Table @tbl-heterogeneity). 
+Overall, exposure to corticosterone during development negatively impacted mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a), and there was no strong evidence for publication bias (See *Supplementary Materials*). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; Table @tbl-heterogeneity and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[1,"I2_study"]`% of variation being driven by differences among studies ($I^2_{study}$; Table @tbl-heterogeneity) and `r i2[1,"I2_tissue_sum"]`% of variation being driven by differences among tissues ($I^2_{tissue}$; Table @tbl-heterogeneity) with little to no variation explained by phylogeny (Table @tbl-heterogeneity). 
 
 Prenatal exposure to corticosterone had a larger negative impact on mitochondrial function than postnatal exposure ($SMD_{H}$ = `r MLMR_list_preprost[[1]]$b[2]`, 95% CI = `r MLMR_list_preprost[[1]]$ci.lb[2]` to `r MLMR_list_preprost[[1]]$ci.ub[2]`), however, this effect was not significant ($p$ = `r MLMR_list_preprost[[1]]$pval[2]`; [@fig-orchard_prepost]a).
 
@@ -547,7 +633,7 @@ z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)),
 ```
 
 ## Social deprivation developmental impacts on mitochondrial function
-Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (Table @tbl-heterogeneity). 
+Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b), and there was also no convincing evidence for publication bias (See *Supplementary Materials*). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (Table @tbl-heterogeneity). 
 
 Social deprevation studies were only ever done with mammals, and all studies manipulated environments postnatally. Mitochondrial function was supressed across all major functional categories but they did not differ significantly from each other ($Q_{M}_{`r MLMR_list_Measure[[2]]$QMdf[1]`, `r MLMR_list_Measure[[2]]$QMdf[2]`}$ = `r MLMR_list_Measure[[2]]$QM`, $p$ = `r MLMR_list_Measure[[2]]$QMp`; [@fig-orchard_measure]b). Effects were more negative for antioxidant capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[1]`) and oxidative damage ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[3]`). While metabolic capacity was also supressed overall, it was not significantly different from zero ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[2]`; [@fig-orchard_measure]b).
 
@@ -609,7 +695,7 @@ ann2 <- function() {list(add_phylopic(img = mammal, x = 4.3, y = -5, height = 0.
 
 ## Disturbance developmental impacts on mitochondrial function
 
-Disturbance during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[3]])$estimate`, 95% CI = `r coef(summary_list[[3]])$ci.lb` to `r coef(summary_list[[3]])$ci.ub`, $p$ = `r coef(summary_list[[3]])$pval`; [@fig-orchard_int]c). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[3]])$pi.lb` to `r predict(summary_list[[3]])$pi.ub`; Table @tbl-heterogeneity), with substantial variation across studies ($I^2_{study}$ = `r i2[2,"I2_study"]`%)(Table @tbl-heterogeneity).
+Disturbance during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[3]])$estimate`, 95% CI = `r coef(summary_list[[3]])$ci.lb` to `r coef(summary_list[[3]])$ci.ub`, $p$ = `r coef(summary_list[[3]])$pval`; [@fig-orchard_int]c). However, there was evidence for publication bias, which if truly present, would change the overall meta-analytic mean to $SMD_{H}$ = `r MLMA_list_pubbias_v[[3]]$b[1]` (95% CI = `r MLMA_list_pubbias_v[[3]]$ci.lb[1]` to `r MLMA_list_pubbias_v[[3]]$ci.ub[1]`, $p$ = `r MLMA_list_pubbias_v[[3]]$pval[1]`) (See *Supplementary Materials*). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[3]])$pi.lb` to `r predict(summary_list[[3]])$pi.ub`; Table @tbl-heterogeneity), with substantial variation across studies ($I^2_{study}$ = `r i2[2,"I2_study"]`%)(Table @tbl-heterogeneity).
 
 Impacts of disturbance affected functional categories significantly differently ($Q_{M}_{`r MLMR_list_Measure[[3]]$QMdf[1]`, `r MLMR_list_Measure[[3]]$QMdf[2]`}$ = `r MLMR_list_Measure[[3]]$QM`, $p$ = `r MLMR_list_Measure[[3]]$QMp` [@fig-orchard_measure]c). Oxidative damage was most impacted by disturbance stress ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[3]`), and differed significantly from antioxidant ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[1]`) and metabolic capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[2]`) ([@fig-orchard_measure]c). 
 
@@ -792,16 +878,12 @@ if(rerun){
                nutri_type_sum <- readRDS(here("output", "models", "nutri_type_sum.rds"))
         
         nutri_up_down_measure <- readRDS(here("output", "models", "nutri_up_down_measure.rds"))
-        
-         nutri_up_down_mammls <- readRDS(here("output", "models", "nutri_up_down_mammls.rds"))
-            nutri_type_mammls <- readRDS(here("output", "models", "nutri_type_mammls.rds"))
-        nutri_type_sum_mammls <- readRDS(here("output", "models", "nutri_type_sum_mammls.rds"))
       
 }
 
 ```
 
-Nutritional stress during development had a weaker negative impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%),  phylogeny ($I^2_{phylogeny}$ = `r i2[3,"I2_species_phylo"]`%) and tissue ($I^2_{tissue}$ = `r i2[3,"I2_tissue_sum"]`%) (Table @tbl-heterogeneity). 
+Nutritional stress during development had a weaker negative impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d). There also was evidence for publication bias. Corrected meta-analytic mean estimates, if publication bias were indeed present, may instead be slightly positive, but remain non-significant ($SMD_{H}$ = `r MLMA_list_pubbias_v[[4]]$b[1]`, 95% CI = `r MLMA_list_pubbias_v[[4]]$ci.lb[1]` to `r MLMA_list_pubbias_v[[4]]$ci.ub[1]`, $p$ = `r MLMA_list_pubbias_v[[4]]$pval[1]`) (See *Supplementary Materials*). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%),  phylogeny ($I^2_{phylogeny}$ = `r i2[3,"I2_species_phylo"]`%) and tissue ($I^2_{tissue}$ = `r i2[3,"I2_tissue_sum"]`%) (Table @tbl-heterogeneity). 
 
 Importantly, there was a taxonomic bias in the types of nutritional manipulations done, with fish studies being the only ones to manipulate carbohydrates; only total food was manipulated across all classes. Under- or over-nutrition did not significantly differ in their impacts on mitochondrial function ($Q_{M}_{`r nutri_up_down$QMdf[1]`, `r nutri_up_down$QMdf[2]`}$ = `r nutri_up_down$QM`, $p$ = `r nutri_up_down$QMp`; [@fig-orchard_nutrition]a) and there was weak evidence for an interaction between measurement type and under/over-nutrition ($Q_{M}_{`r nutri_up_down_measure$QMdf[1]`, `r nutri_up_down_measure$QMdf[2]`}$ = `r nutri_up_down_measure$QM`, $p$ = `r nutri_up_down_measure$QMp`). In fact, there was little evidence that mitochodnrial function differed across functional trait categories generally ([@fig-orchard_measure]d). The best supported model, suggested, protein and fat manipulations did have a larger negative impact on mitochondrial function compared to carbohydrate manipulations but this effect was confounded with taxonomic class where only mammals had protein manipulations (Protein Contrast $SMD_{H}$ = `r nutri_type$b[3]`, 95% CI: `r nutri_type$ci.lb[3]` to `r nutri_type$ci.ub[3]`, $p$ = `r nutri_type$pval[3]`; Fat Contrast $SMD_{H}$ = `r nutri_type$b[2]`, 95% CI: `r nutri_type$ci.lb[2]` to `r nutri_type$ci.ub[2]`, $p$ = `r nutri_type$pval[2]` [@fig-orchard_nutrition]b). There was no evidence that the stage of manipulation when nutritional stress took place impacted mitochondrial function ([@fig-orchard_prepost]d). 
 
@@ -916,3 +998,28 @@ eq2  <- c(
 flextable(round_df(m2, digits = 3))  %>% compose(part = "header", value = as_paragraph(as_equation(eq2))) %>% 
   width(j = c(1:9), width = c(1.5, rep(0.65, 8)))  %>%  compose(j = c(7,8), i = 4, value = as_paragraph("–"))
 ```
+
+#### Publicaton bias
+
+```{r, fig-funnels}
+#| label: fig-funnels
+#| echo: false
+#| warning: false
+#| error: false
+#| fig-cap: "**Funnel plots for each developmental stressor dataset**. Each point represents an effect size (SMDH) and its precision (1/SE). The dashed line represents no effect (i.e., $SMD_{H}$ = 0)."
+# Funnel plots
+plots <- lapply(data_lists, function(x) ggplot(x, aes(x = SMDH, y = 1/sqrt(v_SMDH))) + geom_point() + labs(x = TeX("$SMD_{H}$"), y = "Precision (1 / SE)") + 
+  theme_classic() + theme(axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16), axis.text = element_text(size = 12), plot.tag = element_text(size = 24)) + geom_vline(xintercept = 0, linetype = "dashed"))
+
+funnels <- plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Social Deprivation") + plots[[4]] + ggtitle("Nutrition") + plot_annotation(tag_levels = "a", tag_suffix = ")")
+
+ggsave(here("output", "figures", "fig_funnel.png"), funnels, width = 7.756863 , height = 6.415686)
+
+funnels <- image_read(here("output", "figures", "fig_funnel.png"))
+funnels
+
+```
+
+While there was evidence for funnel asymmetry for the corticosterone ([@fig-funnels]a), disturbance ([@fig-funnels]b), and social deprivation datasets ([@fig-funnels]c), this was not the case for the nutrition dataset ([@fig-funnels]c). However, overall asymmetry is likely driven by small sample sizes in most of these datasets. 
+
+We more formally tested for publication bias by including the inverse effective sample size as a moderator in our MLMA models, which better controlled for sources of heterogeneity. Overall, we found no evidence for a significant slope, indicative of possible publication bias, for the corticosterone ($\beta$ = `r MLMA_list_pubbias_se[[1]]$b[2]`, 95% CI = `r MLMA_list_pubbias_se[[1]]$ci.lb[2]` to `r MLMA_list_pubbias_se[[1]]$ci.ub[2]`, $p$ = `r MLMA_list_pubbias_se[[1]]$pval[2]`)or deprvivation ($\beta$ = `r MLMA_list_pubbias_se[[2]]$b[2]`, 95% CI = `r MLMA_list_pubbias_se[[2]]$ci.lb[2]` to `r MLMA_list_pubbias_se[[2]]$ci.ub[2]`, $p$ = `r MLMA_list_pubbias_se[[2]]$pval[2]`) datasets. However, we did find evidence for a significant slope for the disturbance model ($\beta$ = `r MLMA_list_pubbias_se[[3]]$b[2]`, 95% CI = `r MLMA_list_pubbias_se[[3]]$ci.lb[2]` to `r MLMA_list_pubbias_se[[3]]$ci.ub[2]`, $p$ = `r MLMA_list_pubbias_se[[3]]$pval[2]`) and nutriton model ($\beta$ = `r MLMA_list_pubbias_se[[4]]$b[2]`, 95% CI = `r MLMA_list_pubbias_se[[4]]$ci.lb[2]` to `r MLMA_list_pubbias_se[[4]]$ci.ub[2]`, $p$ = `r MLMA_list_pubbias_se[[4]]$pval[2]`). Re-fitting models with the inverse effective sample size as a moderator suggested that, if publicaton bias was present, overall meta-analytic means would change to $SMD_{H}$ = `r MLMA_list_pubbias_v[[3]]$b[1]` (95% CI = `r MLMA_list_pubbias_v[[3]]$ci.lb[1]` to `r MLMA_list_pubbias_v[[3]]$ci.ub[1]`, $p$ = `r MLMA_list_pubbias_v[[3]]$pval[1]`) for disturbance and $SMD_{H}$ = `r MLMA_list_pubbias_v[[4]]$b[1]` (95% CI = `r MLMA_list_pubbias_v[[4]]$ci.lb[1]` to `r MLMA_list_pubbias_v[[4]]$ci.ub[1]`, $p$ = `r MLMA_list_pubbias_v[[4]]$pval[1]`) for nutrition. 
