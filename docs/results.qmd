@@ -504,6 +504,72 @@ rerun = FALSE
 ```
 
 
+```{r, delay_models}
+#| label: delay_models
+#| echo: false
+#| warning: false
+#| error: false
+
+#### -------------------------------------------------- ####
+# 1.            Delay between Treatments and Trait measurement
+#### -------------------------------------------------- ####
+  
+  rerun = FALSE
+  if(rerun){
+    
+    # Create list to store models
+    delay_list <- list()
+    
+    for(i in 1:length(data_lists)){
+      # Add observation level random effect
+        data_lists[[i]]$obs <- 1:nrow(data_lists[[i]])
+
+      # Calculate delay
+        data_lists[[i]] <- data_lists[[i]] %>% 
+          mutate(delay = ifelse(stage == "postnatal", postnatal_measure_delay, 
+                                  ifelse(stage == "prenatal", prenatal_measure_delay,     postnatal_measure_delay)))
+
+      # Prune the tree to relevant taxa contained within this dataset.
+        tree_prune <- tree_checks(tree = phylo, dataCol = "species_phylo", data = data_lists[[i]], type ="prune")
+
+      # Calculate the phylogenetic correlation matrix
+        phylo_cor <- vcv(tree_prune, cor = TRUE)
+
+      # Fit the MLMA model for each dataset. Vary random effects structure based on levels of the random effects in the dataset
+     
+      if(i == 2){
+          delay_list[[i]] <- rma.mv(SMDH ~ 1 + delay, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| obs),
+                          test = "t",  
+                          data = data_lists[[i]])
+      } else {
+          delay_list[[i]] <- rma.mv(SMDH ~ 1 + delay, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = data_lists[[i]])
+      }
+      
+      # Add names to make sure we keep track of which dataset is which model                      
+        names(delay_list)[i] <- names(data_lists)[i]
+    }
+
+    # Save the model
+        saveRDS(delay_list, file = here("output", "models", "delay_list.rds"))
+       
+
+  } else {
+        delay_list <- readRDS(here("output", "models", "delay_list.rds"))
+
+  }
+
+
+```
+
 ```{r, mlma_pubias}
 #| label: mlma_pubias
 #| echo: false
@@ -622,7 +688,7 @@ z = list(data.frame(x = 1.2, y = 5),
 
 Overall, exposure to corticosterone during development negatively impacted mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[1]])$estimate`, 95% CI = `r coef(summary_list[[1]])$ci.lb` to `r coef(summary_list[[1]])$ci.ub`, $p$ = `r coef(summary_list[[1]])$pval`; [@fig-orchard_int]a), and there was no strong evidence for publication bias (See *Supplementary Materials*). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[1]])$pi.lb` to `r predict(summary_list[[1]])$pi.ub`; Table @tbl-heterogeneity and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[1,"I2_study"]`% of variation being driven by differences among studies ($I^2_{study}$; Table @tbl-heterogeneity) and `r i2[1,"I2_tissue_sum"]`% of variation being driven by differences among tissues ($I^2_{tissue}$; Table @tbl-heterogeneity) with little to no variation explained by phylogeny (Table @tbl-heterogeneity). 
 
-Prenatal exposure to corticosterone had a larger negative impact on mitochondrial function than postnatal exposure ($SMD_{H}$ = `r MLMR_list_preprost[[1]]$b[2]`, 95% CI = `r MLMR_list_preprost[[1]]$ci.lb[2]` to `r MLMR_list_preprost[[1]]$ci.ub[2]`), however, this effect was not significant ($p$ = `r MLMR_list_preprost[[1]]$pval[2]`; [@fig-orchard_prepost]a).
+Prenatal exposure to corticosterone had a larger negative impact on mitochondrial function than postnatal exposure ($SMD_{H}$ = `r MLMR_list_preprost[[1]]$b[2]`, 95% CI = `r MLMR_list_preprost[[1]]$ci.lb[2]` to `r MLMR_list_preprost[[1]]$ci.ub[2]`), however, this effect was not significant ($p$ = `r MLMR_list_preprost[[1]]$pval[2]`; [@fig-orchard_prepost]a). There was also no evidence that time between treatment and measurement of mitochondrial function influenced the effect size ($\beta$ = `r delay_list[[1]]$b[2]`, 95% CI = `r delay_list[[1]]$ci.lb[2]` to `r delay_list[[1]]$ci.ub[2]`, $p$ = `r delay_list[[1]]$pval[2]`; [@fig-delay]a).
 
 Mitochondrial function was supressed across all major functional categories in a similar fashion with no significant differences among functional categories ($Q_{M}_{`r MLMR_list_Measure[[1]]$QMdf[1]`, `r MLMR_list_Measure[[1]]$QMdf[2]`}$ = `r MLMR_list_Measure[[1]]$QM`, $p$ = `r MLMR_list_Measure[[1]]$QMp` [@fig-orchard_measure]a). Treatment with corticostrone supressed respiration and metabolic capacity the greatest (respiraton: $SMD_{H}$ = `r MLMR_list_Measure_noint[[1]]$b[4]`, 95% CI: `r MLMR_list_Measure_noint[[1]]$ci.lb[4]` to `r MLMR_list_Measure_noint[[1]]$ci.ub[4]`, $p$ = `r MLMR_list_Measure_noint[[1]]$pval[4]`; metabolic capacity: $SMD_{H}$ = `r MLMR_list_Measure_noint[[1]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[1]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[1]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[1]]$pval[2]`) and increased oxidative damage ($SMD_{H}$ = `r MLMR_list_Measure_noint[[1]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[1]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[1]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[1]]$pval[3]`). 
 
@@ -663,7 +729,7 @@ z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)),
 ## Social deprivation developmental impacts on mitochondrial function
 Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b), and there was also no convincing evidence for publication bias (See *Supplementary Materials*). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (Table @tbl-heterogeneity). 
 
-Social deprevation studies were only ever done with mammals, and all studies manipulated environments postnatally. Mitochondrial function was supressed across all major functional categories but they did not differ significantly from each other ($Q_{M}_{`r MLMR_list_Measure[[2]]$QMdf[1]`, `r MLMR_list_Measure[[2]]$QMdf[2]`}$ = `r MLMR_list_Measure[[2]]$QM`, $p$ = `r MLMR_list_Measure[[2]]$QMp`; [@fig-orchard_measure]b). Effects were more negative for antioxidant capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[1]`) and oxidative damage ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[3]`). While metabolic capacity was also supressed overall, it was not significantly different from zero ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[2]`; [@fig-orchard_measure]b).
+Social deprevation studies were only ever done with mammals, and all studies manipulated environments postnatally. There was also no evidence that time between treatment and measurement of mitochondrial function influenced the effect size ($\beta$ = `r delay_list[[2]]$b[2]`, 95% CI = `r delay_list[[2]]$ci.lb[2]` to `r delay_list[[2]]$ci.ub[2]`, $p$ = `r delay_list[[2]]$pval[2]`; [@fig-delay]b).Mitochondrial function was supressed across all major functional categories but they did not differ significantly from each other ($Q_{M}_{`r MLMR_list_Measure[[2]]$QMdf[1]`, `r MLMR_list_Measure[[2]]$QMdf[2]`}$ = `r MLMR_list_Measure[[2]]$QM`, $p$ = `r MLMR_list_Measure[[2]]$QMp`; [@fig-orchard_measure]b). Effects were more negative for antioxidant capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[1]`) and oxidative damage ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[3]`). While metabolic capacity was also supressed overall, it was not significantly different from zero ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[2]`; [@fig-orchard_measure]b).
 
 
 ```{r, fig-orchard_taxa}
@@ -671,7 +737,7 @@ Social deprevation studies were only ever done with mammals, and all studies man
 #| echo: false
 #| warning: false
 #| error: false
-#| fig-cap: "**Overall meta-analytic mean estimates for each taxonomic group (class) across developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each class. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation."
+#| fig-cap: "**Overall meta-analytic mean estimates for each taxonomic group (class) across developmental stressors (a) corticosterone, (b) disturbance stress and (c) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each class. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation. Social deprevation was not included as it only has one level for class (Mammalia) (see Figure 2 for effects)."
   
     # get silouettes for taxa
      
@@ -727,7 +793,7 @@ Disturbance during development had a negative impact on mitochondrial function (
 
 Impacts of disturbance affected functional categories significantly differently ($Q_{M}_{`r MLMR_list_Measure[[3]]$QMdf[1]`, `r MLMR_list_Measure[[3]]$QMdf[2]`}$ = `r MLMR_list_Measure[[3]]$QM`, $p$ = `r MLMR_list_Measure[[3]]$QMp` [@fig-orchard_measure]c). Oxidative damage was most impacted by disturbance stress ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[3]`), and differed significantly from antioxidant ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[1]`) and metabolic capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[3]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[3]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[3]]$pval[2]`) ([@fig-orchard_measure]c). 
 
-Disturbance stress occured only postnatally in fish and birds, whereas in mammals disturbance stressors were also applied prenatally. As such, there was some taxonomic bias. However, we did not find any significant differences among classes ($Q_{M}_{`r MLMR_list_taxa[[3]]$QMdf[1]`, `r MLMR_list_taxa[[3]]$QMdf[2]`}$ = `r MLMR_list_taxa[[3]]$QM`, $p$ = `r MLMR_list_taxa[[3]]$QMp`; [@fig-orchard_taxa]b). Despite this, we found evidence that prenatal and post-natal disturbance stressors had different impacts on mitochondrial function. Prenatal disturbance stressors had a larger negative (albeit non-significant) impact on mitochondrial function compared to postnatal disturbance (Contrast $SMD_{H}$ = `r MLMR_list_preprost[[3]]$b[2]`, 95% CI = `r MLMR_list_preprost[[3]]$ci.lb[2]` to `r MLMR_list_preprost[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_preprost[[3]]$pval[2]`; [@fig-orchard_prepost]b). Overall, prenatal disturbance stressors had a larger negative impact on mitochondrial function ($SMD_{H}$ = `r MLMR_list_preprost_noint[[3]]$b[2]`, 95% CI = `r MLMR_list_preprost_noint[[3]]$ci.lb[2]` to `r MLMR_list_preprost_noint[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_preprost_noint[[3]]$pval[2]`), whereas postnatal disturbance stressors had a smaller negative impact ($SMD_{H}$ = `r MLMR_list_preprost_noint[[3]]$b[1]`, 95% CI = `r MLMR_list_preprost_noint[[3]]$ci.lb[1]` to `r MLMR_list_preprost_noint[[3]]$ci.ub[1]`, $p$ = `r MLMR_list_preprost_noint[[3]]$pval[1]`) ([@fig-orchard_prepost]b).
+Disturbance stress occured only postnatally in fish and birds, whereas in mammals disturbance stressors were also applied prenatally. As such, there was some taxonomic bias. However, we did not find any significant differences among classes ($Q_{M}_{`r MLMR_list_taxa[[3]]$QMdf[1]`, `r MLMR_list_taxa[[3]]$QMdf[2]`}$ = `r MLMR_list_taxa[[3]]$QM`, $p$ = `r MLMR_list_taxa[[3]]$QMp`; [@fig-orchard_taxa]b). Despite this, we found evidence that prenatal and post-natal disturbance stressors had different impacts on mitochondrial function. Prenatal disturbance stressors had a larger negative (albeit non-significant) impact on mitochondrial function compared to postnatal disturbance (Contrast $SMD_{H}$ = `r MLMR_list_preprost[[3]]$b[2]`, 95% CI = `r MLMR_list_preprost[[3]]$ci.lb[2]` to `r MLMR_list_preprost[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_preprost[[3]]$pval[2]`; [@fig-orchard_prepost]b). Overall, prenatal disturbance stressors had a larger negative impact on mitochondrial function ($SMD_{H}$ = `r MLMR_list_preprost_noint[[3]]$b[2]`, 95% CI = `r MLMR_list_preprost_noint[[3]]$ci.lb[2]` to `r MLMR_list_preprost_noint[[3]]$ci.ub[2]`, $p$ = `r MLMR_list_preprost_noint[[3]]$pval[2]`), whereas postnatal disturbance stressors had a smaller negative impact ($SMD_{H}$ = `r MLMR_list_preprost_noint[[3]]$b[1]`, 95% CI = `r MLMR_list_preprost_noint[[3]]$ci.lb[1]` to `r MLMR_list_preprost_noint[[3]]$ci.ub[1]`, $p$ = `r MLMR_list_preprost_noint[[3]]$pval[1]`) ([@fig-orchard_prepost]b). Again, time between treatment and measurement of mitochondrial function did not influence average effect size ($\beta$ = `r delay_list[[3]]$b[2]`, 95% CI = `r delay_list[[3]]$ci.lb[2]` to `r delay_list[[3]]$ci.ub[2]`, $p$ = `r delay_list[[3]]$pval[2]`; [@fig-delay]c).
 
 
 ```{r, fig-orchard_prepost}
@@ -735,7 +801,7 @@ Disturbance stress occured only postnatally in fish and birds, whereas in mammal
 #| echo: false
 #| warning: false
 #| error: false
-#| fig-cap: "**Overall meta-analytic mean estimates different stages of manipulation (pre-natal, post-natal or both) across different developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each stage. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation."
+#| fig-cap: "**Overall meta-analytic mean estimates different stages of manipulation (pre-natal, post-natal or both) across different developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Mean estimates are shown as large points, with 95% confidence (thick black bars) and prediction (thin black bars). The number of effects (k) along with the number of studies (in parantheses) are shown provided for each stage. The dashed line represents no effect (i.e., $SMD_{H}$ = 0). Raw data are also shown and are weighted by their inverse sampling error (precision). Note raw data is truncated for ease of visualisation. Social deprevation was not included as it only has one level for stage (post-natal) (see Figure 2 for effects)."
 
  # Get summary data for levels
 prepost_table <- lapply(data_lists, function(x) x  %>% group_by(stage) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
@@ -757,6 +823,25 @@ z = list(data.frame(x = c(1.2, 2.2), y = rep(4, 2)),
     p_prepost
 ```
 
+```{r, fig-delay}
+#| label: fig-delay
+#| echo: false
+#| warning: false
+#| error: false
+#| fig-cap: "**Bubble plots of the impact of measurement delay between ending of treatment and trait measurement on $SMD_{H}$ across different developmental stressors (a) corticosterone, (b) social deprevation, (c) disturbance stress and (d) nutritional stress**. Predicted mean (central black line), with 95% confidence (dashed line) and prediction intervals (dotted line). The number of effects (k) are shown provided for each dataset. Raw data are also shown and are weighted by their inverse sampling error (precision). "
+
+ # Get summary data for levels
+  
+    plots  <- lapply(delay_list, function(x){ bubble_plot(x, mod = "delay", ylab = TeX("$SMD_{H}$"),xlab = "Measurement Delay (days)",  group = "study") +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+                                                      axis.text = element_text(size = 12),
+                                                       plot.tag = element_text(size = 24))})
+                                                                        
+    delay <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation") + plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig5.png"), delay, width = 8.703704, height = 8.679012)
+
+    delay <- image_read(here("output", "figures", "fig5.png"))
+    delay
+```
 
 ## Nutrition developmental impacts on mitochondrial function
 
@@ -783,6 +868,10 @@ z = list(data.frame(x = c(1.2, 2.2), y = rep(4, 2)),
   tabyl(nutri_data, nutrition_sum, measurement_category) # Looks good
   tabyl(nutri_data, nutrition_type, class) # Major tax bias. Carbs and fat mostly fish, protein mostly mammals
   tabyl(nutri_data, nutrition_sum, class) # No overnutrition of amphibians
+  
+# Have a look at mammals
+  nutri_data_mammals_sum <- nutri_data %>% filter(class == "Mammalia")  %>% group_by(nutrition_type, nutrition_sum)  %>% 
+    summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n())
   
 rerun = FALSE
 if(rerun){
@@ -913,7 +1002,7 @@ if(rerun){
 
 Nutritional stress during development had a weaker negative impact on mitochondrial function overall ($SMD_{H}$ = `r coef(summary_list[[4]])$estimate`, 95% CI = `r coef(summary_list[[4]])$ci.lb` to `r coef(summary_list[[4]])$ci.ub`, $p$ = `r coef(summary_list[[4]])$pval`; [@fig-orchard_int]d). There also was evidence for publication bias. Corrected meta-analytic mean estimates, if publication bias were indeed present, may instead be slightly positive, but remain non-significant ($SMD_{H}$ = `r MLMA_list_pubbias_v[[4]]$b[1]`, 95% CI = `r MLMA_list_pubbias_v[[4]]$ci.lb[1]` to `r MLMA_list_pubbias_v[[4]]$ci.ub[1]`, $p$ = `r MLMA_list_pubbias_v[[4]]$pval[1]`) (See *Supplementary Materials*). Effect heterogeneity was high (95% Prediction Intervals: `r predict(summary_list[[4]])$pi.lb` to `r predict(summary_list[[4]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with variation being driven by differences between studies ($I^2_{study}$ = `r i2[3,"I2_study"]`%),  phylogeny ($I^2_{phylogeny}$ = `r i2[3,"I2_species_phylo"]`%) and tissue ($I^2_{tissue}$ = `r i2[3,"I2_tissue_sum"]`%) (Table @tbl-heterogeneity). 
 
-Importantly, there was a taxonomic bias in the types of nutritional manipulations done, with fish studies being the only ones to manipulate carbohydrates; only total food was manipulated across all classes. Under- or over-nutrition did not significantly differ in their impacts on mitochondrial function ($Q_{M}_{`r nutri_up_down$QMdf[1]`, `r nutri_up_down$QMdf[2]`}$ = `r nutri_up_down$QM`, $p$ = `r nutri_up_down$QMp`; [@fig-orchard_nutrition]a) and there was weak evidence for an interaction between measurement type and under/over-nutrition ($Q_{M}_{`r nutri_up_down_measure$QMdf[1]`, `r nutri_up_down_measure$QMdf[2]`}$ = `r nutri_up_down_measure$QM`, $p$ = `r nutri_up_down_measure$QMp`). In fact, there was little evidence that mitochodnrial function differed across functional trait categories generally ([@fig-orchard_measure]d). The best supported model, suggested, protein and fat manipulations did have a larger negative impact on mitochondrial function compared to carbohydrate manipulations but this effect was confounded with taxonomic class where only mammals had protein manipulations (Protein Contrast $SMD_{H}$ = `r nutri_type$b[3]`, 95% CI: `r nutri_type$ci.lb[3]` to `r nutri_type$ci.ub[3]`, $p$ = `r nutri_type$pval[3]`; Fat Contrast $SMD_{H}$ = `r nutri_type$b[2]`, 95% CI: `r nutri_type$ci.lb[2]` to `r nutri_type$ci.ub[2]`, $p$ = `r nutri_type$pval[2]` [@fig-orchard_nutrition]b). There was no evidence that the stage of manipulation when nutritional stress took place impacted mitochondrial function ([@fig-orchard_prepost]d). 
+Importantly, there was a taxonomic bias in the types of nutritional manipulations done, with fish studies being the only ones to manipulate carbohydrates; only total food was manipulated across all classes. Under- or over-nutrition did not significantly differ in their impacts on mitochondrial function ($Q_{M}_{`r nutri_up_down$QMdf[1]`, `r nutri_up_down$QMdf[2]`}$ = `r nutri_up_down$QM`, $p$ = `r nutri_up_down$QMp`; [@fig-orchard_nutrition]a) and there was weak evidence for an interaction between measurement type and under/over-nutrition ($Q_{M}_{`r nutri_up_down_measure$QMdf[1]`, `r nutri_up_down_measure$QMdf[2]`}$ = `r nutri_up_down_measure$QM`, $p$ = `r nutri_up_down_measure$QMp`). In fact, there was little evidence that mitochodnrial function differed across functional trait categories generally ([@fig-orchard_measure]d). The best supported model, suggested, protein and fat manipulations did have a larger negative impact on mitochondrial function compared to carbohydrate manipulations but this effect was confounded with taxonomic class where only mammals had protein manipulations (Protein Contrast $SMD_{H}$ = `r nutri_type$b[3]`, 95% CI: `r nutri_type$ci.lb[3]` to `r nutri_type$ci.ub[3]`, $p$ = `r nutri_type$pval[3]`; Fat Contrast $SMD_{H}$ = `r nutri_type$b[2]`, 95% CI: `r nutri_type$ci.lb[2]` to `r nutri_type$ci.ub[2]`, $p$ = `r nutri_type$pval[2]` [@fig-orchard_nutrition]b). There was no evidence that the stage of manipulation when nutritional stress took place impacted mitochondrial function ([@fig-orchard_prepost]d), or that measurement delay influenced average effect size ($\beta$ = `r delay_list[[4]]$b[2]`, 95% CI = `r delay_list[[4]]$ci.lb[2]` to `r delay_list[[4]]$ci.ub[2]`, $p$ = `r delay_list[[4]]$pval[2]`; [@fig-delay]d).
 
 ```{r, fig-orchard_nutrition}
 #| label: fig-orchard_nutrition
@@ -1045,6 +1134,16 @@ ggsave(here("output", "figures", "fig_funnel.png"), funnels, width = 7.756863 , 
 
 funnels <- image_read(here("output", "figures", "fig_funnel.png"))
 funnels
+
+# Also look at resiudals
+
+# extract random effects from the models
+       rands  <- lapply(MLMA_list, function(x) ranef(x))
+
+  study_blups <- lapply(rands, function(x) x$study)
+species_blups <- lapply(rands, function(x) x$species_phylo)
+ tissue_blups <- lapply(rands, function(x) x$tissue_sum)
+
 
 ```
 
