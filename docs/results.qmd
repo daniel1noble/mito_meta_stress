@@ -90,9 +90,11 @@ After quantifying levels of heterogeneity in each of the different stressor data
 
 We had a substantially larger dataset of studies measuring nutritional stress. These studies were more variable and so we included some additional moderators to capture variation in effects. These included: 1) whether the nutritional manipulation involved over or under nutrition and 2) the type of nutritional manipulation done (e.g., fat, protein, total food or carbohydrate manipulation). We expected that the different measurement trait categories may exhibit different responses to nutritional stress and so we also included an interaction between measurement category and whether the study over/under manipulated nutrition. We did not have enough data to estimate an interaction between manipulation type and functional category. We fit three models that included: 1) only nutrition type as a moderator, 2) only under/over nutrition as a moderator and 3) a combined model with both main effects. We evaluated support among models using AIC, choosing the simplest model (fewest estimated parameters) when the $\Delta$AIC values were within 2 units of each other. 
 
-#### Publication Bias
+#### Sensitivity Analyses and Publication Bias
 
 Publication bias was checked by first visually exploring plots between each effect size and its precision (1 / SE) for each stressor type (i.e., funnel plots). Importantly, funnel asymmetry can be caused by non-independence and high heterogeneity. As such, we tested for publication bias more formally by altering our overall MLMA models to include the square root inverse effective sample size as a moderator [@Nakagawa2022-gy]. We used the inverse effective sample size because the sampling variance of SMDH includes the effect size itself in its calculation inducing a correlation [@Nakagawa2022-gy]. This method allows one to test for publication bias inferentially. When the slope of the moderator is significantly different from zero, it indicates that publication bias is potentially present. If the slope was significant, we refit models with the inverse effective sample size (not square rooted) because this provides an unbiased estimate of the meta-analytic mean (intercept) [@Nakagawa2022-gy]. Of course, we can never be certain publication bias is truly ever present so these analyses should be viewed as a sensitivity analysis to check the robustness of our results.
+
+Effect sizes in two datasets were very large (i.e., $SMD_{H} < -20$). We checked the data extraction and summary statistics for these (and other data) to ensure they were correctly extracted. However, in all cases they were correct. To ensure that our results were not impacted by these extreme effect sizes we also conducted a sensitivity analysis to check the robustness of our results by refitting the models for these two datasets (nutrition and disturbance) excluding these large effect sizes and compared the results to the original models. In both cases, overall meta-analytic means were unaffected by the inclusion of these extreme effect sizes (See *Supplementary Material*).
 
 # Results
 
@@ -144,19 +146,45 @@ Publication bias was checked by first visually exploring plots between each effe
       # Add names to make sure we keep track of which dataset is which model                      
         names(MLMA_list)[i] <- names(data_lists)[i]
     }
+
+    # Sensitivity analysis. Test for influential effects. Couple data sets have SMDH -20. We've checked these for entry errors but all appear correctly extracted from the original papers.
+
+  sens_dat <- lapply(data_lists[c(2,4)], function(x) 
+             x  %>% filter(SMDH > -20))
+ 
+    sens_disturb <- rma.mv(SMDH ~ 1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| obs),
+                          test = "t",  
+                          data = sens_dat[[1]]  %>% 
+                            mutate(obs = 1:nrow(sens_dat[[1]])))
+              
+
+   sens_nutr <- rma.mv(SMDH ~ 1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = sens_dat[[2]]  %>% 
+                            mutate(obs = 1:nrow(sens_dat[[2]])))
+
       
     # Save the model
         saveRDS(MLMA_list, file = here("output", "models", "MLMA_list.rds"))
+        saveRDS(sens_disturb, file = here("output", "models", "sens_disturb.rds"))
+        saveRDS(sens_nutr, file = here("output", "models", "sens_nutr.rds"))
 
   } else {
         MLMA_list <- readRDS(here("output", "models", "MLMA_list.rds"))
+        sens_disturb <- readRDS(here("output", "models", "sens_disturb.rds"))
+        sens_nutr <- readRDS(here("output", "models", "sens_nutr.rds"))
   }
 
 # summary
   summary_list <- lapply(MLMA_list, function(x) summary(x, digits = 3))
 
-# RVE to check robustness of results
-  robust_list <- lapply(MLMA_list, function(x) robust(x, cluster = x$data[,"study"]))
 ```
 
 ```{r, tbl-heterogeneity}
@@ -1023,3 +1051,7 @@ funnels
 While there was evidence for funnel asymmetry for the corticosterone ([@fig-funnels]a), disturbance ([@fig-funnels]b), and social deprivation datasets ([@fig-funnels]c), this was not the case for the nutrition dataset ([@fig-funnels]c). However, overall asymmetry is likely driven by small sample sizes in most of these datasets. 
 
 We more formally tested for publication bias by including the inverse effective sample size as a moderator in our MLMA models, which better controlled for sources of heterogeneity. Overall, we found no evidence for a significant slope, indicative of possible publication bias, for the corticosterone ($\beta$ = `r MLMA_list_pubbias_se[[1]]$b[2]`, 95% CI = `r MLMA_list_pubbias_se[[1]]$ci.lb[2]` to `r MLMA_list_pubbias_se[[1]]$ci.ub[2]`, $p$ = `r MLMA_list_pubbias_se[[1]]$pval[2]`)or deprvivation ($\beta$ = `r MLMA_list_pubbias_se[[2]]$b[2]`, 95% CI = `r MLMA_list_pubbias_se[[2]]$ci.lb[2]` to `r MLMA_list_pubbias_se[[2]]$ci.ub[2]`, $p$ = `r MLMA_list_pubbias_se[[2]]$pval[2]`) datasets. However, we did find evidence for a significant slope for the disturbance model ($\beta$ = `r MLMA_list_pubbias_se[[3]]$b[2]`, 95% CI = `r MLMA_list_pubbias_se[[3]]$ci.lb[2]` to `r MLMA_list_pubbias_se[[3]]$ci.ub[2]`, $p$ = `r MLMA_list_pubbias_se[[3]]$pval[2]`) and nutriton model ($\beta$ = `r MLMA_list_pubbias_se[[4]]$b[2]`, 95% CI = `r MLMA_list_pubbias_se[[4]]$ci.lb[2]` to `r MLMA_list_pubbias_se[[4]]$ci.ub[2]`, $p$ = `r MLMA_list_pubbias_se[[4]]$pval[2]`). Re-fitting models with the inverse effective sample size as a moderator suggested that, if publicaton bias was present, overall meta-analytic means would change to $SMD_{H}$ = `r MLMA_list_pubbias_v[[3]]$b[1]` (95% CI = `r MLMA_list_pubbias_v[[3]]$ci.lb[1]` to `r MLMA_list_pubbias_v[[3]]$ci.ub[1]`, $p$ = `r MLMA_list_pubbias_v[[3]]$pval[1]`) for disturbance and $SMD_{H}$ = `r MLMA_list_pubbias_v[[4]]$b[1]` (95% CI = `r MLMA_list_pubbias_v[[4]]$ci.lb[1]` to `r MLMA_list_pubbias_v[[4]]$ci.ub[1]`, $p$ = `r MLMA_list_pubbias_v[[4]]$pval[1]`) for nutrition. 
+
+#### Impacts of extreme effects on overall meta-analytic means
+
+In the nutrition and disturbance datasets, we found two extreme effects that differed markedly from the majority of data ($SMD_{H}$ > -20) (see @fig-funnels). Careful data checking did not indicate any obvious data entry errors. To understand how they impacted the overall meta-analytic means, we re-ran the models without these extreme effects. We found that removing these extreme effects had little impact on the overall meta-analytic means for nutrition ($SMD_{H}$ = `r sens_nutr$b[1]`, 95% CI = `r sens_nutr$ci.lb[1]` to `r sens_nutr$ci.ub[1]`, $p$ = `r sens_nutr$pval[1]`) and disturbance ($SMD_{H}$ = `r sens_disturb$b[1]`, 95% CI = `r sens_disturb$ci.lb[1]` to `r sens_disturb$ci.ub[1]`, $p$ = `r sens_disturb$pval[1]`), and our overall conclusions remain unchanged.
