@@ -1138,12 +1138,11 @@ funnels
 # Also look at resiudals
 
 # extract random effects from the models
-       rands  <- lapply(MLMA_list, function(x) ranef(x))
+       blups  <- lapply(MLMA_list, function(x) ranef(x))
 
-  study_blups <- lapply(rands, function(x) x$study)
-species_blups <- lapply(rands, function(x) x$species_phylo)
- tissue_blups <- lapply(rands, function(x) x$tissue_sum)
-
+  study_blups <- lapply(blups, function(x) x$study)
+species_blups <- lapply(blups, function(x) x$species_phylo)
+ tissue_blups <- lapply(blups, function(x) x$tissue_sum)
 
 ```
 
