@@ -1,6 +1,9 @@
 # mito_meta_stress
 How developmental stress programs mitochondrial function
 
+## TO DO:
+- Need to update with oxidative stress category. Damage and stress are different things.
+
 ## 1. How to use this repository?
 
 Users can download a zip file of the entire repository by clicking on the green `code` tab at the top of the page and then clicking `Download ZIP`. Alternatively, the repo can be downloaded from [Zenodo](). Users who already have a GitHub account can `fork` the repository.
