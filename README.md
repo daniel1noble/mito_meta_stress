@@ -1,4 +1,7 @@
 # mito_meta_stress
+
+[![DOI](https://zenodo.org/badge/942312257.svg)](https://doi.org/10.5281/zenodo.17290931)
+
 How developmental stress programs mitochondrial function
 
 ## 1. How to use this repository?
