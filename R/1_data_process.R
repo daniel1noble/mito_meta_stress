@@ -41,9 +41,13 @@
 	unique(data$tissue_sum) # Some issues here "BAT" == "brown adipose tissue (BAT)" == "bat"; "whole body" == "whole animal"; "whole blood" == "blood"; "skeletal muscle" == "muscle"; 
 	unique(data$stage) # re-cat pre/post to both
 
+	# Check effects/studies in some measure categories
+	tabyl(data, measurement_category) %>% arrange(desc(n))
+	data  %>% group_by(measurement_category) %>% summarise(studies = n_distinct(study), effects = n()) %>% arrange(desc(effects))
+
 	# Fix the issues
 	data <- data %>%
-		mutate(measurement_category = ifelse(measurement_category == "gene expression", "gene/protein expression",  if_else(measurement_category == "oxidative stress", "oxidative damage", measurement_category)),
+		mutate(measurement_category = ifelse(measurement_category == "gene expression", "gene/protein expression", measurement_category),
 				tissue_sum = ifelse(tissue_sum == "brown adipose tissue (BAT)", "BAT", tissue_sum),
 				tissue_sum = ifelse(tissue_sum == "bat", "BAT", tissue_sum),
 				tissue_sum = ifelse(tissue_sum == "whole animal", "whole body", tissue_sum),
@@ -175,4 +179,8 @@
 
 
 any(data$study == "s73") # Check if this study is in the data. It is not, so we can remove it from the list of studies to check
+
+
+
+
 
