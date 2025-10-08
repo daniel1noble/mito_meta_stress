@@ -706,10 +706,10 @@ While effects appeared to be stronger in mammals, there were no significant diff
 measure_table <- lapply(data_lists, function(x) x  %>% group_by(measurement_category) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()))
 
 # Create coordinate system that is unique for each plot
-z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)),
-         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4,4)))
+z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2, 5.2), y = rep(4, 5)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2, 5.2), y = rep(4,5)))
   
 # Apply orchard to each model and add the k and spp information to the plot
   plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
