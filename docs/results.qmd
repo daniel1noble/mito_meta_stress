@@ -55,6 +55,9 @@ editor:
 # All data summary
   data <- plyr::ldply(data_lists)
 
+# Summary of sexes category
+  tabyl(data, sex)
+  
 # Bring in the phylogeny 
   phylo <- read.tree(here("output", "phylo", "phylo_pruned_species.nwk"))
 
