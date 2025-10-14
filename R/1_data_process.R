@@ -177,6 +177,10 @@
 	summary_table <- summary_table %>% mutate(envirn_type = c("Nutrition", "CORT", "Care Deprivation", "Disturbance"))  %>% select(envirn_type, everything())
 	write.csv(summary_table, here("output", "tables", "data_sum_table.csv"), row.names = FALSE)
 
+# Check how many studies for temperature which we do not focus on because of challenges with interpretation
+	temps <- data  %>% filter(envirn_type == "temp")
+	unique(temps$study) # 33 studies
+	dim(temps) # 459 effects
 
 any(data$study == "s73") # Check if this study is in the data. It is not, so we can remove it from the list of studies to check
 
