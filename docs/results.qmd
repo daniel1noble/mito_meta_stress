@@ -241,9 +241,9 @@ flextable(round_df(i2, digits = 3))  %>% compose(part = "header", value = as_par
     theme_tree2() + labs(x = "Millions of Years (MY)") +
     theme(legend.position = "none") 
 
-    ggsave(filename = here("output", "figures", "phylo.png"), fig_phylo, width = 4.298039, height = 5.992157)
+    ggsave(filename = here("output", "figures", "fig3.png"), fig_phylo, width = 4.298039, height = 5.992157)
 
-  p_phylo_img <- image_read(here("output", "figures", "phylo.png"))
+  p_phylo_img <- image_read(here("output", "figures", "fig3.png"))
   p_phylo_img
 
 ```
@@ -670,20 +670,28 @@ z = list(data.frame(x = 1.2, y = 5),
          data.frame(x = 1.2, y = 5),
          data.frame(x = 1.2, y = 5))
 
-    plots  <- mapply(function(x, y, z) orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  
-                                                ylim(-8,8) + scale_x_discrete(labels = "Overall") +
-                                                theme_classic() + theme(legend.position = "top",
-                                                                        axis.title = element_text(size = 18),
-                                                                        plot.title = element_text(face = "bold", size = 16),
-                                                                        axis.text = element_text(size = 12),
-                                                                        plot.tag = element_text(size = 24)) + scale_color_manual(values = "black") + scale_fill_manual(values = "gray") +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMA_list, y = table, z = z, SIMPLIFY = FALSE)
+# Get p-values from the models
+    p_mlma <- round(sapply(MLMA_list, function(x) coef(summary(x))$pval), 2)
+
+    plots  <- mapply(function(x, y, z, p) 
+      orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  
+          ylim(-8,8) + scale_x_discrete(labels = "Overall") +
+         theme_classic() + theme(legend.position = "top",
+                                 axis.title = element_text(size = 18),
+                                 plot.title = element_text(face = "bold", size = 16),
+                                 axis.text = element_text(size = 12),
+                                 plot.tag = element_text(size = 24)) + 
+    scale_color_manual(values = "black") + 
+    scale_fill_manual(values = "gray") +
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) +
+    annotate("text", x = c(z$x), y = c(z$y)-12, label = TeX(paste0("\\textit{p} = ", p)), size = 5, hjust = 0), 
+    x = MLMA_list, y = table, z = z, p = p_mlma, SIMPLIFY = FALSE)
 
 
-    p_overall <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig1.png"), p_overall, width = 13.283950, height = 7.864197)
-
-    p_overall <- image_read(here("output", "figures", "fig1.png"))
+    p_overall <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental Care Deprivation")) / (plots[[3]] + ggtitle("Psychological Disturbance") + plots[[4]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig4.png"), p_overall, width = 12.815686, height = 8.282353)
+  
+    p_overall <- image_read(here("output", "figures", "fig4.png"))
     p_overall
 ```
 
@@ -714,25 +722,28 @@ z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2, 5.2), y = rep(4, 5)),
          data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)),
          data.frame(x = c(1.2, 2.2, 3.2, 4.2, 5.2), y = rep(4,5)))
   
+# p-value for measurement category moderator
+    p_measure <- lapply(MLMR_list_Measure_noint, function(x) round(x$pval, 2))
+
 # Apply orchard to each model and add the k and spp information to the plot
-  plots  <- mapply(function(x, y, z) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+  plots  <- mapply(function(x, y, z, p) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, SIMPLIFY = FALSE)                                                 
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) + annotate("text", x = c(z$x), y = c(z$y)-12, label = TeX(paste0("\\textit{p} = ", p)), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, p = p_measure, SIMPLIFY = FALSE)                                                 
 
 
 # Create a layout for the plots
-    p_measure <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation")) / (plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig2.png"), p_measure, width = 15.09877, height = 10.11111)
+    p_measure <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation")) / (plots[[3]] + ggtitle("Psychological disturbance") + plots[[4]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig5.png"), p_measure, width = 14.74510, height = 10.37647)
 
-    p_measure <- image_read(here("output", "figures", "fig2.png"))
+    p_measure <- image_read(here("output", "figures", "fig5.png"))
     p_measure
 ```
 
 ## Social deprivation developmental impacts on mitochondrial function
 Social deprivation during development had a negative impact on mitochondrial function ($SMD_{H}$ = `r coef(summary_list[[2]])$estimate`, 95% CI = `r coef(summary_list[[2]])$ci.lb` to `r coef(summary_list[[2]])$ci.ub`, $p$ = `r coef(summary_list[[2]])$pval`; [@fig-orchard_int]b), and there was also no convincing evidence for publication bias (See *Supplementary Materials*). Effect heterogeneity was again high (95% Prediction Intervals: `r predict(summary_list[[2]])$pi.lb` to `r predict(summary_list[[2]])$pi.ub`; Table @tbl-heterogeneity; and see Table S @tbl-heterogeneity_cv & Table S @tbl-heterogeneity_m2), with `r i2[4,"I2_study"]`% of the variation being driven by differences among studies ($I^2_{study}$) (Table @tbl-heterogeneity). 
 
-Social deprevation studies were only ever done with mammals, and all studies manipulated environments postnatally. There was also no evidence that time between treatment and measurement of mitochondrial function influenced the effect size ($\beta$ = `r delay_list[[2]]$b[2]`, 95% CI = `r delay_list[[2]]$ci.lb[2]` to `r delay_list[[2]]$ci.ub[2]`, $p$ = `r delay_list[[2]]$pval[2]`; [@fig-delay]b).Mitochondrial function was supressed across all major functional categories but they did not differ significantly from each other ($Q_{M}_{`r MLMR_list_Measure[[2]]$QMdf[1]`, `r MLMR_list_Measure[[2]]$QMdf[2]`}$ = `r MLMR_list_Measure[[2]]$QM`, $p$ = `r MLMR_list_Measure[[2]]$QMp`; [@fig-orchard_measure]b). Effects were more negative for antioxidant capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[1]`) and oxidative damage ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[3]`). While metabolic capacity was also supressed overall, it was not significantly different from zero ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[2]`; [@fig-orchard_measure]b).
+Social deprevation studies were only ever done with mammals, and all studies manipulated environments postnatally. There was also no evidence that time between treatment and measurement of mitochondrial function influenced the effect size ($\beta$ = `r delay_list[[2]]$b[2]`, 95% CI = `r delay_list[[2]]$ci.lb[2]` to `r delay_list[[2]]$ci.ub[2]`, $p$ = `r delay_list[[2]]$pval[2]`; [@fig-delay]b).Mitochondrial function was supressed across all major functional categories but they did not differ significantly from each other ($Q_{M}_{`r MLMR_list_Measure[[2]]$QMdf[1]`, `r MLMR_list_Measure[[2]]$QMdf[2]`}$ = `r MLMR_list_Measure[[2]]$QM`, $p$ = `r MLMR_list_Measure[[2]]$QMp`; [@fig-orchard_measure]b). Effects were more negative for antioxidant capacity ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[1]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[1]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[1]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[1]`),  oxidative damage ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[3]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[3]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[3]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[3]`) and oxidative stress ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[4]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[4]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[4]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[4]`). While metabolic capacity was also supressed overall, it was not significantly different from zero ($SMD_{H}$ = `r MLMR_list_Measure_noint[[2]]$b[2]`, 95% CI: `r MLMR_list_Measure_noint[[2]]$ci.lb[2]` to `r MLMR_list_Measure_noint[[2]]$ci.ub[2]`, $p$ = `r MLMR_list_Measure_noint[[2]]$pval[2]`; [@fig-orchard_measure]b).
 
 
 ```{r, fig-orchard_taxa}
@@ -773,20 +784,29 @@ z = list(data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)),
          data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)),
          data.frame(x = c(1.2, 2.2, 3.2, 4.2), y = rep(4, 4)))
 
-    plots  <- mapply(function(x, y, z)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+w = list(data.frame(x = c(1.2, 2.2, 3.2)-0.5, y = rep(4, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2)-0.5, y = rep(4, 3)),
+         data.frame(x = c(1.2, 2.2, 3.2, 4.2)-0.5, y = rep(4, 4)))         
+
+# p-values
+    
+    p_taxa <- lapply(MLMR_list_taxa_noint[c(1,3,4)], function(x) round(x$pval, 2))
+
+    plots  <- mapply(function(x, y, z, w, p)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
-                                                       plot.tag = element_text(size = 24))+
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
+                                                       plot.tag = element_text(size = 24)) +
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) + 
+    annotate("text", x = c(w$x), y = c(w$y), label = TeX(paste0("\\textit{p} = ", p)), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, w = w, p = p_taxa, SIMPLIFY = FALSE)
                                                        
 ann1 <- function() {list(add_phylopic(img = mammal, x = 3.3, y = -5, height = 0.45),
                          add_phylopic(img = bird, x = 2.3, y = -5, height = 0.45), add_phylopic(img = fish, x = 1.3, y = -5, height = 0.35))}
 ann2 <- function() {list(add_phylopic(img = mammal, x = 4.3, y = -5, height = 0.45),
                          add_phylopic(img = bird, x = 3.3, y = -5, height = 0.45),
                          add_phylopic(img = amphib, x = 2.3, y = -5, height = 0.35), add_phylopic(img = fish, x = 1.3, y = -5, height = 0.35))}
-    p_taxa <- (plots[[1]] + ann1() + ggtitle("Corticosterone") + plots[[2]] + ann1() + ggtitle("Disturbance") + plots[[3]] + ann2() + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig3.png"), p_taxa, width = 17.407407, height = 6.358025)
+    p_taxa <- (plots[[1]] + ann1() + ggtitle("Glucocorticoids") + plots[[2]] + ann1() + ggtitle("Psychological disturbance") + plots[[3]] + ann2() + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig6.png"), p_taxa, width = 16.854902, height = 6.078431)
 
-    p_taxa <- image_read(here("output", "figures", "fig3.png"))
+    p_taxa <- image_read(here("output", "figures", "fig6.png"))
     p_taxa
 ```
 
@@ -813,16 +833,23 @@ prepost_table <- lapply(data_lists, function(x) x  %>% group_by(stage) %>% summa
 z = list(data.frame(x = c(1.2, 2.2), y = rep(4, 2)),
          data.frame(x = c(1.2, 2.2), y = rep(4, 2)),
          data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)))
-  
-    plots  <- mapply(function(x,y,z){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+w  = list(data.frame(x = c(1.2, 2.2), y = rep(4, 2)-12),
+         data.frame(x = c(1.2, 2.2), y = rep(4, 2)-12),
+         data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)-12))
+# p-values
+   p_prepost <- lapply(MLMR_list_preprost_noint[c(1,3,4)], function(x) round(x$pval, 2))
+
+    plots  <- mapply(function(x,y,z,w, p){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0)}, x = MLMR_list_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, SIMPLIFY = FALSE)
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) + 
+    annotate("text", x = c(w$x), y = c(w$y), label = TeX(paste0("\\textit{p} = ", p)), size = 5, hjust = 0)
+    }, x = MLMR_list_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, w = w, p = p_prepost, SIMPLIFY = FALSE)
                                                                         
-    p_prepost <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig5.png"), p_prepost, width = 16.679012, height = 5.419753)
+    p_prepost <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Psychological disturbance") + plots[[3]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig7.png"), p_prepost, width = 16.572549, height = 5.968627)
 
-    p_prepost <- image_read(here("output", "figures", "fig5.png"))
+    p_prepost <- image_read(here("output", "figures", "fig7.png"))
     p_prepost
 ```
 
@@ -839,10 +866,10 @@ z = list(data.frame(x = c(1.2, 2.2), y = rep(4, 2)),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24))})
                                                                         
-    delay <- (plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Social Deprivation") + plots[[3]] + ggtitle("Disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
-    ggsave(here("output", "figures", "fig5.png"), delay, width = 8.703704, height = 8.679012)
+    delay <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation") + plots[[3]] + ggtitle("Psychological disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    ggsave(here("output", "figures", "fig_delay.png"), delay, width = 8.703704, height = 8.679012)
 
-    delay <- image_read(here("output", "figures", "fig5.png"))
+    delay <- image_read(here("output", "figures", "fig_delay.png"))
     delay
 ```
 
@@ -900,8 +927,18 @@ if(rerun){
                             R = list(species_phylo = phylo_cor),
                           test = "t", 
                           data = nutri_data)
+
+        nutri_up_down_noint <- rma.mv(SMDH ~ nutrition_sum-1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = nutri_data)                          
        # Save the model
         saveRDS(nutri_up_down, file = here("output", "models", "nutri_up_down.rds"))
+        saveRDS(nutri_up_down_noint, file = here("output", "models", "nutri_up_down_noint.rds"))
 
        nutri_type <- rma.mv(SMDH ~ nutrition_type, V = v_SMDH, 
                             random = list(~1| study, 
@@ -910,9 +947,20 @@ if(rerun){
                                           ~1| obs),
                             R = list(species_phylo = phylo_cor),
                           test = "t", 
-                          data = nutri_data)                   
+                          data = nutri_data)        
+
+       nutri_type_noint <- rma.mv(SMDH ~ nutrition_type-1, V = v_SMDH, 
+                            random = list(~1| study, 
+                                          ~1| species_phylo,
+                                          ~1| tissue_sum,
+                                          ~1| obs),
+                            R = list(species_phylo = phylo_cor),
+                          test = "t", 
+                          data = nutri_data)   
+
         # Save the model
         saveRDS(nutri_type, file = here("output", "models", "nutri_type.rds"))
+        saveRDS(nutri_type_noint, file = here("output", "models", "nutri_type_noint.rds"))
 
         nutri_type_sum <- rma.mv(SMDH ~ nutrition_type + nutrition_sum, V = v_SMDH, 
                               random = list(~1| study, 
@@ -994,8 +1042,10 @@ if(rerun){
         AIC(nutri_type_sum_mammls, nutri_type_mammls, nutri_up_down_mammls)  # Most parsimonious model is nutri_type_sum_mammls
 } else {
                 nutri_up_down <- readRDS(here("output", "models", "nutri_up_down.rds"))
+                nutri_up_down_noint <- readRDS(here("output", "models", "nutri_up_down_noint.rds"))
                    nutri_type <- readRDS(here("output", "models", "nutri_type.rds"))
                nutri_type_sum <- readRDS(here("output", "models", "nutri_type_sum.rds"))
+               nutri_type_noint <- readRDS(here("output", "models", "nutri_type_noint.rds"))
         
         nutri_up_down_measure <- readRDS(here("output", "models", "nutri_up_down_measure.rds"))
       
@@ -1019,21 +1069,26 @@ Importantly, there was a taxonomic bias in the types of nutritional manipulation
  nutri_table <- nutri_data  %>% group_by(nutrition_type) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n()) 
  nutri_table2 <- nutri_data  %>% group_by(nutrition_sum) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n())
 
+# P-values
+  p_nutri <- round(nutri_type$pval, 2)
+  p_nutri2 <- round(nutri_up_down$pval, 2)  
+
 p_up_down <- orchard_plot(nutri_up_down, mod = "nutrition_sum", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) + 
   ylim(-8,8) + theme_classic() + 
   theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16), axis.text = element_text(size = 12), plot.tag = element_text(size = 24)) + 
-  annotate("text",y = c(rep(5, 2)), x = c(1.10, 2.10), label = TeX(paste0("\\textit{k} = ", nutri_table2$k, " (", nutri_table2$studies, ")")), size = 5, hjust = 0)
+  annotate("text",y = c(rep(5, 2)), x = c(1.20, 2.20), label = TeX(paste0("\\textit{k} = ", nutri_table2$k, " (", nutri_table2$studies, ")")), size = 5, hjust = 0) +
+  annotate("text",y = c(rep(5, 2))-12, x = c(1.20, 2.20), label = TeX(paste0("\\textit{p} = ", p_nutri2)), size = 5, hjust = 0)
 
 p_type <- orchard_plot(nutri_type, mod = "nutrition_type", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) + 
   ylim(-8,8) + theme_classic() + 
   theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16), axis.text = element_text(size = 12), plot.tag = element_text(size = 24)) + 
-  annotate("text", y = c(rep(5, 4)), x = c(1.10, 2.10, 3.10, 4.10), label = TeX(paste0("\\textit{k} = ", nutri_table$k, " (", nutri_table$studies, ")")), size = 5, hjust = 0)
+  annotate("text", y = c(rep(5, 4)), x = c(1.20, 2.20, 3.20, 4.20), label = TeX(paste0("\\textit{k} = ", nutri_table$k, " (", nutri_table$studies, ")")), size = 5, hjust = 0) + annotate("text",y = c(rep(5, 4))-12, x = c(1.20, 2.20, 3.20, 4.20), label = TeX(paste0("\\textit{p} = ", p_nutri)), size = 5, hjust = 0)
   
-p_nutr <- p_up_down + p_type + plot_annotation(tag_levels = "a", tag_suffix = ")")
-ggsave(here("output", "figures", "fig4.png"), p_nutr, width = 14.135802, height = 6.283951)
+p_nutr <- p_up_down + p_type + plot_annotation(title = "Nutritional imbalance", tag_levels = "a", tag_suffix = ")", theme = theme(plot.title = element_text(face = "bold", size = 20), plot.tag = element_text(size = 24)))
+ggsave(here("output", "figures", "fig8.png"), p_nutr, width = 14.031372, height = 6.345098)
 
 # Read in the image
-p_nutr <- image_read(here("output", "figures", "fig4.png"))
+p_nutr <- image_read(here("output", "figures", "fig8.png"))
 p_nutr
 
 ```
