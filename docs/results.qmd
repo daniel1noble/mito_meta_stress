@@ -506,7 +506,6 @@ rerun = FALSE
   mammals_sp <- data %>% filter(class == "Mammalia") %>% reframe(sp = unique(species_phylo2))
 ```
 
-
 ```{r, delay_models}
 #| label: delay_models
 #| echo: false
@@ -1042,10 +1041,10 @@ if(rerun){
         AIC(nutri_type_sum_mammls, nutri_type_mammls, nutri_up_down_mammls)  # Most parsimonious model is nutri_type_sum_mammls
 } else {
                 nutri_up_down <- readRDS(here("output", "models", "nutri_up_down.rds"))
-                nutri_up_down_noint <- readRDS(here("output", "models", "nutri_up_down_noint.rds"))
+          nutri_up_down_noint <- readRDS(here("output", "models", "nutri_up_down_noint.rds"))
                    nutri_type <- readRDS(here("output", "models", "nutri_type.rds"))
                nutri_type_sum <- readRDS(here("output", "models", "nutri_type_sum.rds"))
-               nutri_type_noint <- readRDS(here("output", "models", "nutri_type_noint.rds"))
+             nutri_type_noint <- readRDS(here("output", "models", "nutri_type_noint.rds"))
         
         nutri_up_down_measure <- readRDS(here("output", "models", "nutri_up_down_measure.rds"))
       
