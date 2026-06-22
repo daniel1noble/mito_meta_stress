@@ -66,6 +66,26 @@ editor:
 
 # Set digits
   options(digits = 2)
+
+# Helper to format p-values for figure labels so they never display as "p = 0".
+# Values < 0.001 are shown as "< 0.001"; values that would round to 0.00 at two
+# decimals are shown to three decimals (e.g. "= 0.002"); otherwise two decimals.
+  format_p <- function(p){
+    vapply(p, function(x){
+      if (is.na(x)) return(NA_character_)
+      if (x < 0.001) return("< 0.001")
+      if (round(x, 2) == 0) return(paste0("= ", formatC(x, format = "f", digits = 3)))
+      paste0("= ", formatC(x, format = "f", digits = 2))
+    }, character(1))
+  }
+
+# Fixed colour palettes so each taxonomic class / developmental stage keeps the
+# same colour across every panel, regardless of how many levels appear in a panel
+# (orchaRd otherwise assigns palette colours by level order, shifting hues when an
+# extra level is present, e.g. Amphibia in the nutrition panel).
+  class_cols <- c("Actinopterygii" = "#88CCEE", "Aves" = "#CC6677",
+                  "Mammalia"       = "#DDCC77", "Amphibia" = "#117733")
+  stage_cols <- c("Postnatal" = "#88CCEE", "Prenatal" = "#CC6677", "Both" = "#DDCC77")
 ```
 
 # Methods
@@ -79,7 +99,7 @@ We calculated $SMD_{H}$ as the mean difference between control and treatment gro
 
 ### *Meta-Analysis*
 
-We analysed our data using multilevel meta-analytic (MLMA) and meta-regression (MLMR) models in R  using *metafor* [vers. `r utils::packageVersion("metafor")` @Viechtbauer2010-fn]. Meta-analytic mean estimates and meta-regression models were plotted using orchard plots which convey overall meta-analytic means, alongside raw effect sizes and prediction intervals, which describe effect heterogeneity [vers. 2.0, @Nakagawa2021-ls; @nakagawaorchard]. 
+We analysed our data using multilevel meta-analytic (MLMA) and meta-regression (MLMR) models in R  using *metafor* [vers. `r utils::packageVersion("metafor")` @Viechtbauer2010-fn]. Meta-analytic mean estimates and meta-regression models were plotted using orchard plots which convey overall meta-analytic means, alongside raw effect sizes and prediction intervals, which describe effect heterogeneity, using the *orchaRd* package [vers. `r utils::packageVersion("orchaRd")`, @Nakagawa2021-ls; @nakagawaorchard]. 
 
 #### *Multi-level Meta-analysis (MLMA) Models*
 
@@ -670,7 +690,7 @@ z = list(data.frame(x = 1.2, y = 5),
          data.frame(x = 1.2, y = 5))
 
 # Get p-values from the models
-    p_mlma <- round(sapply(MLMA_list, function(x) coef(summary(x))$pval), 2)
+    p_mlma <- sapply(MLMA_list, function(x) coef(summary(x))$pval)
 
     plots  <- mapply(function(x, y, z, p) 
       orchard_plot(x, xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  
@@ -683,11 +703,11 @@ z = list(data.frame(x = 1.2, y = 5),
     scale_color_manual(values = "black") + 
     scale_fill_manual(values = "gray") +
     annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) +
-    annotate("text", x = c(z$x), y = c(z$y)-12, label = TeX(paste0("\\textit{p} = ", p)), size = 5, hjust = 0), 
+    annotate("text", x = c(z$x), y = c(z$y)-12, label = TeX(paste0("\\textit{p} ", format_p(p))), size = 5, hjust = 0),
     x = MLMA_list, y = table, z = z, p = p_mlma, SIMPLIFY = FALSE)
 
 
-    p_overall <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental Care Deprivation")) / (plots[[3]] + ggtitle("Psychological Disturbance") + plots[[4]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    p_overall <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental Care Deprivation")) / (plots[[3]] + ggtitle("Psychological Disturbance") + plots[[4]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "A")
     ggsave(here("output", "figures", "fig4.png"), p_overall, width = 12.815686, height = 8.282353)
   
     p_overall <- image_read(here("output", "figures", "fig4.png"))
@@ -722,17 +742,17 @@ z = list(data.frame(x = c(1.2, 2.2, 3.2, 4.2, 5.2), y = rep(4, 5)),
          data.frame(x = c(1.2, 2.2, 3.2, 4.2, 5.2), y = rep(4,5)))
   
 # p-value for measurement category moderator
-    p_measure <- lapply(MLMR_list_Measure_noint, function(x) round(x$pval, 2))
+    p_measure <- lapply(MLMR_list_Measure_noint, function(x) x$pval)
 
 # Apply orchard to each model and add the k and spp information to the plot
   plots  <- mapply(function(x, y, z, p) orchard_plot(x, mod = "measurement_category", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) + annotate("text", x = c(z$x), y = c(z$y)-12, label = TeX(paste0("\\textit{p} = ", p)), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, p = p_measure, SIMPLIFY = FALSE)                                                 
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) + annotate("text", x = c(z$x), y = c(z$y)-12, label = TeX(paste0("\\textit{p} ", format_p(p))), size = 5, hjust = 0), x = MLMR_list_Measure, y = measure_table, z = z, p = p_measure, SIMPLIFY = FALSE)
 
 
 # Create a layout for the plots
-    p_measure <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation")) / (plots[[3]] + ggtitle("Psychological disturbance") + plots[[4]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    p_measure <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation")) / (plots[[3]] + ggtitle("Psychological disturbance") + plots[[4]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "A")
     ggsave(here("output", "figures", "fig5.png"), p_measure, width = 14.74510, height = 10.37647)
 
     p_measure <- image_read(here("output", "figures", "fig5.png"))
@@ -789,20 +809,21 @@ w = list(data.frame(x = c(1.2, 2.2, 3.2)-0.5, y = rep(4, 3)),
 
 # p-values
     
-    p_taxa <- lapply(MLMR_list_taxa_noint[c(1,3,4)], function(x) round(x$pval, 2))
+    p_taxa <- lapply(MLMR_list_taxa_noint[c(1,3,4)], function(x) x$pval)
 
-    plots  <- mapply(function(x, y, z, w, p)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+    plots  <- mapply(function(x, y, z, w, p)  {orchard_plot(x, mod = "class", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, g = FALSE, k = FALSE) +  ylim(-8,8) +
+    scale_fill_manual(values = class_cols) + scale_colour_manual(values = class_cols) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) + 
-    annotate("text", x = c(w$x), y = c(w$y), label = TeX(paste0("\\textit{p} = ", p)), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, w = w, p = p_taxa, SIMPLIFY = FALSE)
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) +
+    annotate("text", x = c(w$x), y = c(w$y), label = TeX(paste0("\\textit{p} ", format_p(p))), size = 5, hjust = 0)}, x = MLMR_list_taxa[c(1,3,4)], y = taxa_table[c(1,3,4)], z = z, w = w, p = p_taxa, SIMPLIFY = FALSE)
                                                        
 ann1 <- function() {list(add_phylopic(img = mammal, x = 3.3, y = -5, height = 0.45),
                          add_phylopic(img = bird, x = 2.3, y = -5, height = 0.45), add_phylopic(img = fish, x = 1.3, y = -5, height = 0.35))}
 ann2 <- function() {list(add_phylopic(img = mammal, x = 4.3, y = -5, height = 0.45),
                          add_phylopic(img = bird, x = 3.3, y = -5, height = 0.45),
                          add_phylopic(img = amphib, x = 2.3, y = -5, height = 0.35), add_phylopic(img = fish, x = 1.3, y = -5, height = 0.35))}
-    p_taxa <- (plots[[1]] + ann1() + ggtitle("Glucocorticoids") + plots[[2]] + ann1() + ggtitle("Psychological disturbance") + plots[[3]] + ann2() + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    p_taxa <- (plots[[1]] + ann1() + ggtitle("Glucocorticoids") + plots[[2]] + ann1() + ggtitle("Psychological disturbance") + plots[[3]] + ann2() + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "A")
     ggsave(here("output", "figures", "fig6.png"), p_taxa, width = 16.854902, height = 6.078431)
 
     p_taxa <- image_read(here("output", "figures", "fig6.png"))
@@ -836,16 +857,17 @@ w  = list(data.frame(x = c(1.2, 2.2), y = rep(4, 2)-12),
          data.frame(x = c(1.2, 2.2), y = rep(4, 2)-12),
          data.frame(x = c(1.2, 2.2, 3.2), y = rep(4, 3)-12))
 # p-values
-   p_prepost <- lapply(MLMR_list_preprost_noint[c(1,3,4)], function(x) round(x$pval, 2))
+   p_prepost <- lapply(MLMR_list_preprost_noint[c(1,3,4)], function(x) x$pval)
 
-    plots  <- mapply(function(x,y,z,w, p){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-8,8) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
+    plots  <- mapply(function(x,y,z,w, p){ orchard_plot(x, mod = "stage", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE, weights = "prop") +  ylim(-8,8) +
+    scale_fill_manual(values = stage_cols) + scale_colour_manual(values = stage_cols) +                                              theme_classic() + theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24)) +
-    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) + 
-    annotate("text", x = c(w$x), y = c(w$y), label = TeX(paste0("\\textit{p} = ", p)), size = 5, hjust = 0)
+    annotate("text", x = c(z$x), y = c(z$y), label = TeX(paste0("\\textit{k} = ", y$k, " (", y$studies, ")")), size = 5, hjust = 0) +
+    annotate("text", x = c(w$x), y = c(w$y), label = TeX(paste0("\\textit{p} ", format_p(p))), size = 5, hjust = 0)
     }, x = MLMR_list_preprost[c(1,3,4)], y = prepost_table[c(1,3,4)], z = z, w = w, p = p_prepost, SIMPLIFY = FALSE)
-                                                                        
-    p_prepost <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Psychological disturbance") + plots[[3]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+
+    p_prepost <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Psychological disturbance") + plots[[3]] + ggtitle("Nutritional imbalance")) + plot_annotation(tag_levels = "A")
     ggsave(here("output", "figures", "fig7.png"), p_prepost, width = 16.572549, height = 5.968627)
 
     p_prepost <- image_read(here("output", "figures", "fig7.png"))
@@ -865,7 +887,7 @@ w  = list(data.frame(x = c(1.2, 2.2), y = rep(4, 2)-12),
                                                       axis.text = element_text(size = 12),
                                                        plot.tag = element_text(size = 24))})
                                                                         
-    delay <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation") + plots[[3]] + ggtitle("Psychological disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "a", tag_suffix = ")") 
+    delay <- (plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation") + plots[[3]] + ggtitle("Psychological disturbance") + plots[[4]] + ggtitle("Nutrition")) + plot_annotation(tag_levels = "A")
     ggsave(here("output", "figures", "fig_delay.png"), delay, width = 8.703704, height = 8.679012)
 
     delay <- image_read(here("output", "figures", "fig_delay.png"))
@@ -1069,21 +1091,21 @@ Importantly, there was a taxonomic bias in the types of nutritional manipulation
  nutri_table2 <- nutri_data  %>% group_by(nutrition_sum) %>% summarise(studies = n_distinct(study), spp = n_distinct(species_phylo), k = n())
 
 # P-values
-  p_nutri <- round(nutri_type$pval, 2)
-  p_nutri2 <- round(nutri_up_down$pval, 2)  
+  p_nutri <- nutri_type$pval
+  p_nutri2 <- nutri_up_down$pval
 
 p_up_down <- orchard_plot(nutri_up_down, mod = "nutrition_sum", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) + 
   ylim(-8,8) + theme_classic() + 
   theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16), axis.text = element_text(size = 12), plot.tag = element_text(size = 24)) + 
   annotate("text",y = c(rep(5, 2)), x = c(1.20, 2.20), label = TeX(paste0("\\textit{k} = ", nutri_table2$k, " (", nutri_table2$studies, ")")), size = 5, hjust = 0) +
-  annotate("text",y = c(rep(5, 2))-12, x = c(1.20, 2.20), label = TeX(paste0("\\textit{p} = ", p_nutri2)), size = 5, hjust = 0)
+  annotate("text",y = c(rep(5, 2))-12, x = c(1.20, 2.20), label = TeX(paste0("\\textit{p} ", format_p(p_nutri2))), size = 5, hjust = 0)
 
 p_type <- orchard_plot(nutri_type, mod = "nutrition_type", xlab = TeX("$SMD_{H}$"), group = "study", trunk.size = 1.2, branch.size = 2, k = FALSE, g = FALSE) + 
   ylim(-8,8) + theme_classic() + 
   theme(legend.position = "top", axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16), axis.text = element_text(size = 12), plot.tag = element_text(size = 24)) + 
-  annotate("text", y = c(rep(5, 4)), x = c(1.20, 2.20, 3.20, 4.20), label = TeX(paste0("\\textit{k} = ", nutri_table$k, " (", nutri_table$studies, ")")), size = 5, hjust = 0) + annotate("text",y = c(rep(5, 4))-12, x = c(1.20, 2.20, 3.20, 4.20), label = TeX(paste0("\\textit{p} = ", p_nutri)), size = 5, hjust = 0)
-  
-p_nutr <- p_up_down + p_type + plot_annotation(title = "Nutritional imbalance", tag_levels = "a", tag_suffix = ")", theme = theme(plot.title = element_text(face = "bold", size = 20), plot.tag = element_text(size = 24)))
+  annotate("text", y = c(rep(5, 4)), x = c(1.20, 2.20, 3.20, 4.20), label = TeX(paste0("\\textit{k} = ", nutri_table$k, " (", nutri_table$studies, ")")), size = 5, hjust = 0) + annotate("text",y = c(rep(5, 4))-12, x = c(1.20, 2.20, 3.20, 4.20), label = TeX(paste0("\\textit{p} ", format_p(p_nutri))), size = 5, hjust = 0)
+
+p_nutr <- p_up_down + p_type + plot_annotation(title = "Nutritional imbalance", tag_levels = "A", theme = theme(plot.title = element_text(face = "bold", size = 20), plot.tag = element_text(size = 24)))
 ggsave(here("output", "figures", "fig8.png"), p_nutr, width = 14.031372, height = 6.345098)
 
 # Read in the image
@@ -1185,7 +1207,7 @@ flextable(round_df(m2, digits = 3))  %>% compose(part = "header", value = as_par
 plots <- lapply(data_lists, function(x) ggplot(x, aes(x = SMDH, y = 1/sqrt(v_SMDH))) + geom_point() + labs(x = TeX("$SMD_{H}$"), y = "Precision (1 / SE)") + 
   theme_classic() + theme(axis.title = element_text(size = 18), plot.title = element_text(face = "bold", size = 16), axis.text = element_text(size = 12), plot.tag = element_text(size = 24)) + geom_vline(xintercept = 0, linetype = "dashed"))
 
-funnels <- plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Social Deprivation") + plots[[4]] + ggtitle("Nutrition") + plot_annotation(tag_levels = "a", tag_suffix = ")")
+funnels <- plots[[1]] + ggtitle("Corticosterone") + plots[[2]] + ggtitle("Disturbance") + plots[[3]] + ggtitle("Social Deprivation") + plots[[4]] + ggtitle("Nutrition") + plot_annotation(tag_levels = "A")
 
 ggsave(here("output", "figures", "fig_funnel.png"), funnels, width = 7.756863 , height = 6.415686)
 
