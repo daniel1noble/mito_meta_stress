@@ -230,7 +230,7 @@ plots <- lapply(data_lists, function(x) ggplot(x, aes(x = SMDH, y = 1/sqrt(v_SMD
   geom_vline(xintercept = 0, linetype = "dashed"))
 # plots[[1:4]] follow data_lists order: cort, deprive (parental care), disturb, nutri.
 funnels <- plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation") +
-  plots[[3]] + ggtitle("Psychological Disturbance") + plots[[4]] + ggtitle("Nutritional imbalance") + plot_annotation(tag_levels = "A")
+  plots[[3]] + ggtitle("Psychological disturbance") + plots[[4]] + ggtitle("Nutritional imbalance") + plot_annotation(tag_levels = "A")
 ggsave(here("output", "figures", "fig_funnel.png"), funnels, width = 7.756863, height = 6.415686)
 message("fig_funnel done")
 

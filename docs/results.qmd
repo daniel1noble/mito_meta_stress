@@ -1209,7 +1209,7 @@ plots <- lapply(data_lists, function(x) ggplot(x, aes(x = SMDH, y = 1/sqrt(v_SMD
 
 # NB: plots come from lapply(data_lists, ...) so plots[[1:4]] are, in order,
 # cort, deprive (parental care), disturb, nutri. Titles must match that data order.
-funnels <- plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation") + plots[[3]] + ggtitle("Psychological Disturbance") + plots[[4]] + ggtitle("Nutritional imbalance") + plot_annotation(tag_levels = "A")
+funnels <- plots[[1]] + ggtitle("Glucocorticoids") + plots[[2]] + ggtitle("Parental care deprivation") + plots[[3]] + ggtitle("Psychological disturbance") + plots[[4]] + ggtitle("Nutritional imbalance") + plot_annotation(tag_levels = "A")
 
 ggsave(here("output", "figures", "fig_funnel.png"), funnels, width = 7.756863 , height = 6.415686)
 
