@@ -4,6 +4,10 @@
 
 How developmental stress programs mitochondrial function
 
+## Citation
+
+Crino, O. L., Friesen, C. R., Hill, G. E., Leibold, D. C., Recio, P., Salin, K., Wild, K. H., & Noble, D. W. A. (2026). How developmental stressors affect mitochondrial respiratory function: A systematic review and meta-analysis. *Biological Reviews*. (In press).
+
 ## 1. How to use this repository?
 
 Users can download a zip file of the entire repository by clicking on the green `code` tab at the top of the page and then clicking `Download ZIP`. Alternatively, the repo can be downloaded from [Zenodo](). Users who already have a GitHub account can `fork` the repository.
